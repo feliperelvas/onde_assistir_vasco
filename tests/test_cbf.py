@@ -1,5 +1,7 @@
 """Cliente HTTP: paginação e retry, sem tocar na rede."""
 
+from datetime import date
+
 import pytest
 import requests
 
@@ -62,7 +64,7 @@ def test_percorre_todas_as_paginas():
         RespostaFalsa({"jogos": [_jogo("2")], "meta": {"last_page": 2}}),
     )
 
-    jogos = cbf.buscar_jogos("42", cbf.date(2026, 1, 1), cbf.date(2026, 12, 31), sessao=sessao)
+    jogos = cbf.buscar_jogos("42", date(2026, 1, 1), date(2026, 12, 31), sessao=sessao)
 
     assert [j.id_jogo for j in jogos] == ["1", "2"]
     assert [c["page"] for c in sessao.chamadas] == [1, 2]
@@ -74,7 +76,7 @@ def test_remove_duplicados_entre_paginas():
         RespostaFalsa({"jogos": [_jogo("1")], "meta": {"last_page": 2}}),
     )
 
-    jogos = cbf.buscar_jogos("42", cbf.date(2026, 1, 1), cbf.date(2026, 12, 31), sessao=sessao)
+    jogos = cbf.buscar_jogos("42", date(2026, 1, 1), date(2026, 12, 31), sessao=sessao)
 
     assert [j.id_jogo for j in jogos] == ["1"]
 
@@ -86,7 +88,7 @@ def test_pagina_vazia_interrompe_last_page_inflado():
         RespostaFalsa({"jogos": [], "meta": {"last_page": 99}}),
     )
 
-    jogos = cbf.buscar_jogos("42", cbf.date(2026, 1, 1), cbf.date(2026, 12, 31), sessao=sessao)
+    jogos = cbf.buscar_jogos("42", date(2026, 1, 1), date(2026, 12, 31), sessao=sessao)
 
     assert len(jogos) == 1
     assert len(sessao.chamadas) == 2
@@ -96,7 +98,7 @@ def test_erro_4xx_nao_e_retentado():
     sessao = SessaoFalsa(RespostaFalsa({}, status=404))
 
     with pytest.raises(cbf.ErroCBF, match="404"):
-        cbf.buscar_jogos("42", cbf.date(2026, 1, 1), cbf.date(2026, 12, 31), sessao=sessao)
+        cbf.buscar_jogos("42", date(2026, 1, 1), date(2026, 12, 31), sessao=sessao)
 
     assert len(sessao.chamadas) == 1
 
@@ -108,7 +110,7 @@ def test_falha_de_rede_e_retentada(monkeypatch):
         RespostaFalsa({"jogos": [_jogo("1")], "meta": {"last_page": 1}}),
     )
 
-    jogos = cbf.buscar_jogos("42", cbf.date(2026, 1, 1), cbf.date(2026, 12, 31), sessao=sessao)
+    jogos = cbf.buscar_jogos("42", date(2026, 1, 1), date(2026, 12, 31), sessao=sessao)
 
     assert len(jogos) == 1
     assert len(sessao.chamadas) == 2
@@ -119,13 +121,13 @@ def test_desiste_depois_do_limite_de_tentativas(monkeypatch):
     sessao = SessaoFalsa(*[requests.ConnectionError("caiu")] * config.TENTATIVAS)
 
     with pytest.raises(cbf.ErroCBF, match="tentativas"):
-        cbf.buscar_jogos("42", cbf.date(2026, 1, 1), cbf.date(2026, 12, 31), sessao=sessao)
+        cbf.buscar_jogos("42", date(2026, 1, 1), date(2026, 12, 31), sessao=sessao)
 
     assert len(sessao.chamadas) == config.TENTATIVAS
 
 
 def test_janela_padrao_cobre_passado_curto_e_temporada_seguinte():
-    inicio, fim = cbf.janela_padrao(cbf.date(2026, 9, 27))
+    inicio, fim = cbf.janela_padrao(date(2026, 9, 27))
 
-    assert inicio == cbf.date(2026, 9, 20)
+    assert inicio == date(2026, 9, 20)
     assert (fim - inicio).days == config.DIAS_PASSADO + config.DIAS_FUTURO

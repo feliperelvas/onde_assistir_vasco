@@ -37,7 +37,9 @@ CATEGORIAS_BASE = {"55", "56", "62", "97"}
 
 # --- API --------------------------------------------------------------------
 API_URL = "https://www.cbf.com.br/api/cbf/onde-assistir/jogos"
-USER_AGENT = "onde-assistir-vasco/1.0 (monitor pessoal de transmissoes; +github.com/felipe/onde-assistir-vasco)"
+# Identificar o cliente e boa pratica; troque pela URL do seu repositorio se
+# quiser deixar um contato para a CBF.
+USER_AGENT = "onde-assistir-vasco/1.0 (monitor pessoal de transmissoes)"
 
 # O site pagina de 15 em 15, mas o backend aceita pageSize maior: a temporada
 # inteira (~1200 jogos) vem em uma requisição. Ainda assim paginamos de verdade

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import time
-from datetime import date, timedelta  # noqa: F401  (date reexportado para os testes)
+from datetime import date, timedelta
 
 import requests
 
