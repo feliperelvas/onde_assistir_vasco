@@ -1,0 +1,82 @@
+name: Onde assistir o Vasco
+
+on:
+  schedule:
+    # Horários em UTC (o GitHub não aceita fuso). Brasília = UTC-3.
+    - cron: "0 11 * * *"   # 08:00 BRT — sync
+    - cron: "0 23 * * *"   # 20:00 BRT — sync
+    - cron: "0 12 * * *"   # 09:00 BRT — lembrete do dia
+  workflow_dispatch:
+    inputs:
+      comando:
+        description: "O que rodar"
+        type: choice
+        options: [sync, lembrete]
+        default: sync
+      dry_run:
+        description: "Só mostrar no log, sem enviar nem commitar"
+        type: boolean
+        default: true
+
+# Um workflow só, e nunca dois runs ao mesmo tempo: os dois comandos escrevem em
+# data/ e pushes concorrentes dariam conflito.
+concurrency:
+  group: vasco
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  monitorar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Decidir o comando
+        id: alvo
+        env:
+          # O cron das 12:00 UTC é o do lembrete; os outros dois sincronizam.
+          CRON: ${{ github.event.schedule }}
+          ENTRADA: ${{ inputs.comando }}
+          DRY: ${{ inputs.dry_run }}
+        run: |
+          if [ -n "$ENTRADA" ]; then
+            comando="$ENTRADA"
+            [ "$DRY" = "true" ] && flags="--dry-run" || flags=""
+          elif [ "$CRON" = "0 12 * * *" ]; then
+            comando="lembrete"; flags=""
+          else
+            comando="sync"; flags=""
+          fi
+          echo "comando=$comando" >> "$GITHUB_OUTPUT"
+          echo "flags=$flags" >> "$GITHUB_OUTPUT"
+          echo "Vai rodar: $comando $flags"
+
+      - name: Rodar
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PYTHONPATH: src
+        run: python -m vascotv ${{ steps.alvo.outputs.comando }} ${{ steps.alvo.outputs.flags }}
+
+      - name: Commitar o estado, se mudou
+        run: |
+          if [ -z "$(git status --porcelain data/)" ]; then
+            echo "Nada mudou em data/; sem commit."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git commit -m "Atualiza calendário do Vasco [skip ci]"
+          # Outro run pode ter commitado no meio do caminho.
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

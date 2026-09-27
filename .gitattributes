@@ -1,0 +1,4 @@
+# O Windows converteria para CRLF, e um '\r' dentro dos blocos `run:` do workflow
+# quebra o bash do runner Ubuntu com "$'\r': command not found".
+* text=auto eol=lf
+*.pem text eol=lf

@@ -1,0 +1,279 @@
+{
+  "jogos": [
+    {
+      "id_jogo": "834625",
+      "num_jogo": "190",
+      "rodada": "19",
+      "grupo": "GRUPO A",
+      "local": "Arena Barueri - Barueri - SP",
+      "data": "30/09/2026",
+      "hora": "15:00",
+      "mandante": {
+        "id": "20002",
+        "nome": "Palmeiras",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20002/escudo.jpg",
+        "gols": null,
+        "penaltis": "0"
+      },
+      "visitante": {
+        "id": "60646",
+        "nome": "Vasco da Gama Saf",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg",
+        "gols": null,
+        "penaltis": "0"
+      },
+      "transmissoes": [
+        {
+          "nome": "Sportv",
+          "logo": ""
+        }
+      ],
+      "competicao": {
+        "campeonato_id": "42",
+        "campeonato_nome": "Campeonato Brasileiro",
+        "categoria_id": "62",
+        "categoria_nome": "SUB17"
+      }
+    },
+    {
+      "id_jogo": "832172",
+      "num_jogo": "282",
+      "rodada": "29",
+      "grupo": "GRUPO ÚNICO",
+      "local": "Nilton Santos - Rio de Janeiro - RJ",
+      "data": "07/10/2026",
+      "hora": "20:30",
+      "mandante": {
+        "id": "60175",
+        "nome": "Botafogo",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60175/escudo.jpg",
+        "gols": null,
+        "penaltis": "0"
+      },
+      "visitante": {
+        "id": "60646",
+        "nome": "Vasco da Gama Saf",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg",
+        "gols": null,
+        "penaltis": "0"
+      },
+      "transmissoes": [
+        {
+          "nome": "Amazon Prime",
+          "logo": ""
+        }
+      ],
+      "competicao": {
+        "campeonato_id": "42",
+        "campeonato_nome": "Campeonato Brasileiro",
+        "categoria_id": "1",
+        "categoria_nome": "Série A"
+      }
+    },
+    {
+      "id_jogo": "832182",
+      "num_jogo": "292",
+      "rodada": "30",
+      "grupo": "GRUPO ÚNICO",
+      "local": "São Januário - Rio de Janeiro - RJ",
+      "data": "10/10/2026",
+      "hora": "17:00",
+      "mandante": {
+        "id": "60646",
+        "nome": "Vasco da Gama Saf",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg",
+        "gols": null,
+        "penaltis": "0"
+      },
+      "visitante": {
+        "id": "20022",
+        "nome": "Remo",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20022/escudo.jpg",
+        "gols": null,
+        "penaltis": "0"
+      },
+      "transmissoes": [
+        {
+          "nome": "Premiere",
+          "logo": ""
+        },
+        {
+          "nome": "Record",
+          "logo": ""
+        },
+        {
+          "nome": "YouTube / Cazé TV",
+          "logo": ""
+        }
+      ],
+      "competicao": {
+        "campeonato_id": "42",
+        "campeonato_nome": "Campeonato Brasileiro",
+        "categoria_id": "1",
+        "categoria_nome": "Série A"
+      }
+    },
+    {
+      "id_jogo": "835397",
+      "num_jogo": "41",
+      "rodada": "1",
+      "grupo": "GRUPO 41",
+      "local": "Luso Brasileiro - Rio de Janeiro - RJ",
+      "data": "08/10/2026",
+      "hora": "16:30",
+      "mandante": {
+        "id": "20016",
+        "nome": "Flamengo",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20016/escudo.jpg",
+        "gols": null,
+        "penaltis": "0"
+      },
+      "visitante": {
+        "id": "60646",
+        "nome": "Vasco da Gama Saf",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg",
+        "gols": null,
+        "penaltis": "0"
+      },
+      "transmissoes": [
+        {
+          "nome": "Mil Sports",
+          "logo": ""
+        },
+        {
+          "nome": "Sportv",
+          "logo": ""
+        }
+      ],
+      "competicao": {
+        "campeonato_id": "24",
+        "campeonato_nome": "Copa do Brasil",
+        "categoria_id": "56",
+        "categoria_nome": "Sub-20"
+      }
+    },
+    {
+      "id_jogo": "833188",
+      "num_jogo": "297",
+      "rodada": "30",
+      "grupo": "GRUPO ÚNICO",
+      "local": "Heriberto Hulse - Criciuma - SC",
+      "data": "27/09/2026",
+      "hora": "11:00",
+      "mandante": {
+        "id": "20019",
+        "nome": "Criciúma",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20019/escudo.jpg",
+        "gols": "3",
+        "penaltis": "0"
+      },
+      "visitante": {
+        "id": "20058",
+        "nome": "Avaí",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20058/escudo.jpg",
+        "gols": "0",
+        "penaltis": "0"
+      },
+      "transmissoes": [
+        {
+          "nome": "ESPN / Disney+",
+          "logo": ""
+        }
+      ],
+      "competicao": {
+        "campeonato_id": "42",
+        "campeonato_nome": "Campeonato Brasileiro",
+        "categoria_id": "2",
+        "categoria_nome": "Série B"
+      }
+    },
+    {
+      "id_jogo": "833190",
+      "num_jogo": "299",
+      "rodada": "30",
+      "grupo": "GRUPO ÚNICO",
+      "local": "Rei Pelé - Maceio - AL",
+      "data": "27/09/2026",
+      "hora": "16:00",
+      "mandante": {
+        "id": "20032",
+        "nome": "CRB",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20032/escudo.jpg",
+        "gols": null,
+        "penaltis": "0"
+      },
+      "visitante": {
+        "id": "20800",
+        "nome": "Cuiabá",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20800/escudo.jpg",
+        "gols": null,
+        "penaltis": "0"
+      },
+      "transmissoes": [
+        {
+          "nome": "ESPN / Disney+",
+          "logo": ""
+        },
+        {
+          "nome": "SportyNet",
+          "logo": ""
+        },
+        {
+          "nome": "X Sports",
+          "logo": ""
+        }
+      ],
+      "competicao": {
+        "campeonato_id": "42",
+        "campeonato_nome": "Campeonato Brasileiro",
+        "categoria_id": "2",
+        "categoria_nome": "Série B"
+      }
+    },
+    {
+      "id_jogo": "835284",
+      "num_jogo": "205",
+      "rodada": "4",
+      "grupo": "GRUPO C",
+      "local": "Augusto Bauer - Brusque - SC",
+      "data": "27/09/2026",
+      "hora": "18:30",
+      "mandante": {
+        "id": "63843",
+        "nome": "Brusque",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/63843/escudo.jpg",
+        "gols": null,
+        "penaltis": "0"
+      },
+      "visitante": {
+        "id": "20038",
+        "nome": "Ferroviária",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20038/escudo.jpg",
+        "gols": null,
+        "penaltis": "0"
+      },
+      "transmissoes": [
+        {
+          "nome": "Canal do Benja / TMC",
+          "logo": ""
+        },
+        {
+          "nome": "SportyNet",
+          "logo": ""
+        }
+      ],
+      "competicao": {
+        "campeonato_id": "42",
+        "campeonato_nome": "Campeonato Brasileiro",
+        "categoria_id": "3",
+        "categoria_nome": "Série C"
+      }
+    }
+  ],
+  "meta": {
+    "current_page": 1,
+    "per_page": 2000,
+    "total": "7",
+    "last_page": 1
+  }
+}
