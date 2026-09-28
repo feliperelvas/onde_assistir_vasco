@@ -1,4 +1,4 @@
-"""Linha de comando: `python -m vascotv sync` e `python -m vascotv lembrete`."""
+"""Linha de comando: `python -m vascotv sync`, `lembrete` e `testar`."""
 
 from __future__ import annotations
 
@@ -96,6 +96,13 @@ def comando_lembrete(args: argparse.Namespace) -> int:
     return 0
 
 
+def comando_testar(args: argparse.Namespace) -> int:
+    # Prova que token e chat_id funcionam sem depender de o calendário mudar.
+    agora = datetime.now(config.FUSO).strftime("%d/%m %H:%M")
+    _entregar([f"✅ Teste do monitor do Vasco ({agora}). O envio está funcionando."], args.dry_run)
+    return 0
+
+
 def construir_parser() -> argparse.ArgumentParser:
     # Parent parser para que --dry-run funcione depois do subcomando, que e a
     # forma que a pessoa naturalmente digita: `vascotv sync --dry-run`.
@@ -118,6 +125,7 @@ def construir_parser() -> argparse.ArgumentParser:
         help="busca o calendario, detecta mudancas e notifica",
     )
     sub.add_parser("lembrete", parents=[comuns], help="avisa sobre os jogos de hoje")
+    sub.add_parser("testar", parents=[comuns], help="envia uma mensagem de teste ao Telegram")
     return parser
 
 
@@ -130,7 +138,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     args = construir_parser().parse_args(argv)
-    acoes = {"sync": comando_sync, "lembrete": comando_lembrete}
+    acoes = {"sync": comando_sync, "lembrete": comando_lembrete, "testar": comando_testar}
     try:
         return acoes[args.comando](args)
     except (cbf.ErroCBF, telegram.ErroTelegram) as erro:

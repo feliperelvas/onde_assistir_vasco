@@ -148,3 +148,24 @@ def test_lembretes_antigos_sao_podados(ambiente, jogo_de_hoje, fazer_jogo):
     cli.main(["lembrete"])
 
     assert storage.carregar_lembretes() == {jogo_de_hoje.id_jogo}
+
+
+# --- testar -----------------------------------------------------------------
+def test_testar_envia_uma_mensagem_sem_tocar_api_nem_estado(ambiente, monkeypatch):
+    def api_proibida(*a, **kw):
+        raise AssertionError("testar não deve consultar a CBF")
+
+    monkeypatch.setattr(cbf, "buscar_todos", api_proibida)
+
+    assert cli.main(["testar"]) == 0
+
+    (mensagem,) = ambiente
+    assert "Teste do monitor do Vasco" in mensagem
+    assert not config.SNAPSHOT_PATH.exists()
+
+
+def test_testar_dry_run_nao_envia(ambiente, capsys):
+    assert cli.main(["testar", "--dry-run"]) == 0
+
+    assert ambiente == []
+    assert "Teste do monitor do Vasco" in capsys.readouterr().out

@@ -11,7 +11,7 @@ on:
       comando:
         description: "O que rodar"
         type: choice
-        options: [sync, lembrete]
+        options: [sync, lembrete, testar]
         default: sync
       dry_run:
         description: "Só mostrar no log, sem enviar nem commitar"

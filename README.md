@@ -59,7 +59,8 @@ export PYTHONPATH=src            # no PowerShell: $env:PYTHONPATH = "src"
 
 python -m vascotv sync --dry-run       # busca de verdade, imprime, não envia nem grava
 python -m vascotv lembrete --dry-run   # mostra o lembrete de hoje
-pytest                                  # 58 testes, nenhum toca a rede
+python -m vascotv testar               # manda uma mensagem de teste ao Telegram
+pytest                                  # 60 testes, nenhum toca a rede
 ```
 
 `--dry-run` nunca envia mensagem nem escreve em `data/` — é seguro rodar antes de configurar
