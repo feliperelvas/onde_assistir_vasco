@@ -1,15 +1,120 @@
 # Onde assistir o Vasco
 
-Monitor do calendário da CBF que avisa no Telegram **onde assistir os jogos do time
-profissional do Vasco** no Campeonato Brasileiro e na Copa do Brasil. Roda de graça no
-GitHub Actions.
+Bot de Telegram que acompanha o calendário da CBF e avisa **onde assistir os jogos do time
+profissional do Vasco** no Campeonato Brasileiro e na Copa do Brasil. Roda sozinho e de graça no
+GitHub Actions: nenhum servidor, nenhum banco de dados.
 
-Duas mensagens, e só elas:
+## O que o bot faz
 
-- **Mudanças** — rodada nova publicada, jogo remarcado, troca de transmissão ou de estádio.
-- **Lembrete** — na manhã do dia do jogo, com horário, estádio e onde passa.
+Ele manda duas mensagens, e só elas. No resto do tempo fica calado.
 
-Nos outros momentos fica calado.
+**Mudanças no calendário** — quando a CBF publica uma rodada nova, remarca um jogo, troca a
+transmissão ou o estádio, ou tira um jogo do calendário. Vários eventos da mesma execução vão
+juntos em uma mensagem:
+
+```
+🔔 Calendário do Vasco atualizado
+
+🔔 Botafogo x Vasco
+🏆 Brasileirão · Série A — rodada 29
+• horário: 20:30 → 21:30
+• transmissão: Amazon Prime → Amazon Prime, Globo
+🕐 07/10 (qua) 21:30
+```
+
+**Lembrete** — na manhã do dia do jogo:
+
+```
+📅 Hoje tem Vasco!
+
+⚽ Botafogo x Vasco
+🏆 Brasileirão · Série A — rodada 29
+🕐 20:30 (horário de Brasília)
+🏟 Nilton Santos — Rio de Janeiro, RJ
+📺 Amazon Prime
+```
+
+Há ainda um terceiro comando, `testar`, que só existe para conferir que o token e o chat estão
+certos: manda uma mensagem fixa, sem consultar a CBF nem gravar nada.
+
+Regras que definem o comportamento:
+
+- **Só o profissional masculino.** Sub-20, Sub-17, Sub-15 e feminino ficam de fora (ver abaixo
+  por que isso não é trivial).
+- **Só jogos futuros geram aviso.** Jogo que já aconteceu e sai da janela de consulta não é
+  anunciado como "removido", e correções em jogos disputados não viram ruído.
+- **O placar é ignorado.** É o único campo que muda durante o jogo; considerá-lo faria o bot
+  disparar a cada gol.
+- **Um lembrete por jogo.** Se o cron rodar duas vezes no mesmo dia, o segundo não repete.
+- **Na dúvida, avisa.** Categoria que o bot não conhece é incluída com um alerta, em vez de
+  descartada em silêncio.
+
+## Quando roda
+
+[`.github/workflows/vasco.yml`](.github/workflows/vasco.yml):
+
+| Cron (UTC) | Brasília | Comando |
+|---|---|---|
+| `0 11 * * *` | 08:00 | `sync` — busca o calendário e avisa mudanças |
+| `0 23 * * *` | 20:00 | `sync` |
+| `0 12 * * *` | 09:00 | `lembrete` — avisa se hoje tem jogo |
+
+É um único workflow, que nunca roda duas vezes ao mesmo tempo, porque os comandos escrevem em
+`data/` e pushes concorrentes dariam conflito.
+
+Para disparar à mão: **Actions → Onde assistir o Vasco → Run workflow**, escolhendo `sync`,
+`lembrete` ou `testar`. A caixa `dry_run` vem **marcada**: assim ele só mostra no log o que faria.
+Desmarque para enviar de verdade.
+
+Dois detalhes do cron do GitHub que explicam comportamentos estranhos:
+
+- **Ele atrasa.** De 5 a 30 minutos em horário de pico. O lembrete das 09:00 pode chegar 09:20.
+- **Ele desliga após 60 dias sem atividade no repositório.** O workflow só commita quando o
+  calendário muda, o que durante a temporada acontece com frequência, mas pode não acontecer no
+  recesso. O GitHub avisa por e-mail antes; para religar, basta **Actions → Onde assistir o
+  Vasco → Enable workflow**.
+
+## Instalação
+
+1. **Crie o bot.** No Telegram, fale com **[@BotFather](https://t.me/BotFather)** e mande
+   `/newbot`. Ele devolve um token no formato `123456789:AAE...`.
+2. **Mande qualquer mensagem para o seu bot** (ele não pode escrever para você antes disso).
+3. **Descubra o `chat_id`.** Abra no navegador, trocando `<TOKEN>` pelo seu,
+   `https://api.telegram.org/bot<TOKEN>/getUpdates` e copie o número em `"chat":{"id":...}`.
+4. **Cadastre os secrets** em **Settings → Secrets and variables → Actions → Repository
+   secrets → New repository secret**:
+
+   | Secret | Valor |
+   |---|---|
+   | `TELEGRAM_BOT_TOKEN` | o token do passo 1 |
+   | `TELEGRAM_CHAT_ID` | o id do passo 3 |
+
+   Têm de ser **Repository secrets**, não *Environment secrets*: o job não declara
+   `environment:`, então secrets de ambiente chegariam vazios.
+5. **Teste o envio**: Run workflow com `testar` e `dry_run` desmarcado. Deve chegar
+   `✅ Teste do monitor do Vasco (...). O envio está funcionando.`
+6. **Opcional**: rode `sync` com `dry_run` marcado para ver no log os jogos que ele encontrou.
+
+Se você for fazer push de alterações no workflow pelo `gh`, o token dele precisa do escopo
+`workflow` (o `repo` sozinho não basta — o GitHub recusa com *refusing to allow an OAuth App to
+create or update workflow*). Para conceder, num terminal interativo:
+`gh auth refresh -h github.com -s workflow`.
+
+## Rodando localmente
+
+```bash
+pip install -r requirements-dev.txt
+export PYTHONPATH=src            # no PowerShell: $env:PYTHONPATH = "src"
+
+python -m vascotv sync --dry-run       # busca de verdade, imprime, não envia nem grava
+python -m vascotv lembrete --dry-run   # mostra o lembrete de hoje, se houver jogo
+python -m vascotv testar --dry-run     # mostra a mensagem de teste
+pytest                                  # 60 testes, nenhum toca a rede
+```
+
+`--dry-run` nunca envia mensagem nem escreve em `data/`, então é seguro rodar sem configurar
+nada. Para enviar de verdade a partir da sua máquina, exporte `TELEGRAM_BOT_TOKEN` e
+`TELEGRAM_CHAT_ID` no shell e rode sem `--dry-run`.
 
 ## Como ele obtém os dados
 
@@ -24,7 +129,10 @@ GET https://www.cbf.com.br/api/cbf/onde-assistir/jogos
 
 O site pagina de 15 em 15, mas o backend aceita `pageSize` maior — a temporada inteira
 (~1200 jogos) cabe em uma requisição de pouco mais de um segundo. São 2 requisições por
-execução de `sync` — 4 por dia, somando os dois horários.
+execução de `sync` (uma por campeonato), 4 por dia.
+
+A janela vai de 7 dias atrás a 400 dias à frente, para pegar a temporada seguinte assim que a CBF
+publicar o calendário.
 
 ### Profissional vs. base: a regra que parece simples e não é
 
@@ -51,71 +159,36 @@ a conexão falharia com `CERTIFICATE_VERIFY_FAILED`. Por isso o intermediário e
 ([`src/vascotv/tls.py`](src/vascotv/tls.py)). A verificação segue completa — em nenhum momento se
 usa `verify=False`.
 
-## Rodando localmente
-
-```bash
-pip install -r requirements-dev.txt
-export PYTHONPATH=src            # no PowerShell: $env:PYTHONPATH = "src"
-
-python -m vascotv sync --dry-run       # busca de verdade, imprime, não envia nem grava
-python -m vascotv lembrete --dry-run   # mostra o lembrete de hoje
-python -m vascotv testar               # manda uma mensagem de teste ao Telegram
-pytest                                  # 60 testes, nenhum toca a rede
-```
-
-`--dry-run` nunca envia mensagem nem escreve em `data/` — é seguro rodar antes de configurar
-qualquer secret.
-
-## Configurando o Telegram
-
-1. No Telegram, fale com **[@BotFather](https://t.me/BotFather)** e mande `/newbot`. Escolha nome
-   e username; ele devolve um token no formato `123456789:AAE...`.
-2. **Mande qualquer mensagem para o seu bot** (ele não pode escrever para você antes disso).
-3. Abra no navegador, trocando `<TOKEN>` pelo seu:
-   `https://api.telegram.org/bot<TOKEN>/getUpdates`
-   e copie o número em `"chat":{"id":...}` — é o seu `chat_id`.
-4. No repositório do GitHub: **Settings → Secrets and variables → Actions → New repository secret**:
-
-   | Secret | Valor |
-   |---|---|
-   | `TELEGRAM_BOT_TOKEN` | o token do passo 1 |
-   | `TELEGRAM_CHAT_ID` | o id do passo 3 |
-
-Para testar sem o GitHub, exporte as duas variáveis no shell e rode sem `--dry-run`.
-
-## Como roda no GitHub Actions
-
-[`.github/workflows/vasco.yml`](.github/workflows/vasco.yml) — um único workflow, porque os dois
-comandos escrevem em `data/` e pushes concorrentes dariam conflito.
-
-| Cron (UTC) | Brasília | Comando |
-|---|---|---|
-| `0 11 * * *` | 08:00 | `sync` |
-| `0 23 * * *` | 20:00 | `sync` |
-| `0 12 * * *` | 09:00 | `lembrete` |
-
-Dá para disparar à mão em **Actions → Onde assistir o Vasco → Run workflow**, escolhendo o comando
-e deixando `dry_run` marcado para só ver o log.
-
-Dois detalhes do cron do GitHub que explicam comportamentos estranhos:
-
-- **Ele atrasa.** De 5 a 30 minutos em horário de pico. O lembrete das 09:00 pode chegar 09:20.
-- **Ele é desativado após 60 dias sem atividade no repositório.** O commit do snapshot em cada
-  execução serve de mitigação; se ainda assim adormecer, troque o `GITHUB_TOKEN` por um PAT.
-
 ## Estado versionado
+
+O git faz as vezes de banco de dados:
 
 - **`data/jogos.json`** — o calendário como estava na última execução. É a base de comparação, e
   o `git log` dele vira o histórico de remarcações. Gravado de forma determinística (chaves
   ordenadas, sem timestamp) para que o workflow commite **somente** quando algo mudou de verdade.
-- **`data/lembretes.json`** — IDs já lembrados, para o cron não avisar duas vezes do mesmo jogo.
-  É podado a cada execução para não crescer sem fim.
+- **`data/lembretes.json`** — IDs de jogos já lembrados, para não avisar duas vezes. É podado a
+  cada execução para não crescer sem fim. Só aparece depois do primeiro lembrete.
 
-O placar não é guardado nem comparado: é o único campo volátil da API, e incluí-lo faria o bot
-disparar a cada gol e sujar o histórico de commits.
-
-Na **primeira execução** não há snapshot: o monitor grava a linha de base e não notifica nada, em
+Na **primeira execução**, sem snapshot, o monitor grava a linha de base e não notifica nada, em
 vez de despejar o calendário inteiro no chat.
+
+Os commits automáticos são feitos pelo `github-actions[bot]` com `[skip ci]` na mensagem.
+
+## O que é público e o que não é
+
+O repositório é público — o que dá Actions ilimitado — e foi montado para que isso não exponha
+nada:
+
+- **Token do bot e `chat_id` só existem nos secrets do GitHub.** Não estão em nenhum arquivo nem
+  no histórico; no log do Actions aparecem mascarados como `***`.
+- **O token nunca vai para o log.** Ele faz parte da URL da API do Telegram, então em caso de
+  erro o bot registra só o código HTTP e a descrição devolvida, nunca a URL
+  ([`telegram.py`](src/vascotv/telegram.py)).
+- **`data/` contém só dados públicos da CBF** (jogos, estádios, transmissões) e IDs de jogo.
+- **O `.pem` em `certs/` é um certificado público de CA**, não uma chave privada.
+- `.env` está no `.gitignore`, caso você guarde as variáveis num arquivo para rodar localmente.
+
+Quem fizer fork recebe o código, mas não os secrets: precisa criar o próprio bot.
 
 ## Estrutura
 
@@ -129,7 +202,9 @@ src/vascotv/
   diff.py      snapshot anterior × novo → eventos
   render.py    eventos → mensagem HTML
   telegram.py  envio
-  cli.py       `sync` e `lembrete`
+  storage.py   leitura e escrita de data/
+  cli.py       `sync`, `lembrete` e `testar`
+tests/         60 testes com respostas reais da API gravadas em fixtures/
 ```
 
 ## Custo, e por que GitHub Actions
