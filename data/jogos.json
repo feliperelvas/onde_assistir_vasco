@@ -53,6 +53,149 @@
         "nome": "Remo",
         "url_escudo": "https://conteudo.cbf.com.br/clubes/20022/escudo.jpg"
       }
+    },
+    {
+      "campeonato_id": "42",
+      "campeonato_nome": "Campeonato Brasileiro",
+      "categoria_id": "1",
+      "categoria_nome": "Série A",
+      "data": "17/10/2026",
+      "grupo": "GRUPO ÚNICO",
+      "hora": "21:00",
+      "id_jogo": "832193",
+      "local": "Morumbi - Sao Paulo - SP",
+      "mandante": {
+        "id": "20005",
+        "nome": "São Paulo",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20005/escudo.jpg"
+      },
+      "num_jogo": "303",
+      "rodada": "31",
+      "transmissoes": [
+        "Premiere",
+        "Sportv"
+      ],
+      "visitante": {
+        "id": "60646",
+        "nome": "Vasco da Gama Saf",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
+      }
+    },
+    {
+      "campeonato_id": "42",
+      "campeonato_nome": "Campeonato Brasileiro",
+      "categoria_id": "1",
+      "categoria_nome": "Série A",
+      "data": "24/10/2026",
+      "grupo": "GRUPO ÚNICO",
+      "hora": "18:30",
+      "id_jogo": "832202",
+      "local": "São Januário - Rio de Janeiro - RJ",
+      "mandante": {
+        "id": "60646",
+        "nome": "Vasco da Gama Saf",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
+      },
+      "num_jogo": "312",
+      "rodada": "32",
+      "transmissoes": [
+        "Premiere",
+        "Record",
+        "YouTube / Cazé TV"
+      ],
+      "visitante": {
+        "id": "20001",
+        "nome": "Corinthians",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20001/escudo.jpg"
+      }
+    },
+    {
+      "campeonato_id": "24",
+      "campeonato_nome": "Copa do Brasil",
+      "categoria_id": "4",
+      "categoria_nome": "Profissional",
+      "data": "01/11/2026",
+      "grupo": "GRUPO 124",
+      "hora": "16:00",
+      "id_jogo": "835309",
+      "local": "Nubank Parque  - Sao Paulo - SP",
+      "mandante": {
+        "id": "20002",
+        "nome": "Palmeiras",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20002/escudo.jpg"
+      },
+      "num_jogo": "152",
+      "rodada": "1",
+      "transmissoes": [
+        "Amazon Prime",
+        "GE TV",
+        "Globo",
+        "Premiere",
+        "Sportv"
+      ],
+      "visitante": {
+        "id": "60646",
+        "nome": "Vasco da Gama Saf",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
+      }
+    },
+    {
+      "campeonato_id": "42",
+      "campeonato_nome": "Campeonato Brasileiro",
+      "categoria_id": "1",
+      "categoria_nome": "Série A",
+      "data": "04/11/2026",
+      "grupo": "GRUPO ÚNICO",
+      "hora": "19:30",
+      "id_jogo": "832228",
+      "local": "Arena da Baixada - Curitiba - PR",
+      "mandante": {
+        "id": "20052",
+        "nome": "Athletico Paranaense",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20052/escudo.jpg"
+      },
+      "num_jogo": "338",
+      "rodada": "34",
+      "transmissoes": [
+        "Premiere",
+        "Record",
+        "YouTube / Cazé TV"
+      ],
+      "visitante": {
+        "id": "60646",
+        "nome": "Vasco da Gama Saf",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
+      }
+    },
+    {
+      "campeonato_id": "24",
+      "campeonato_nome": "Copa do Brasil",
+      "categoria_id": "4",
+      "categoria_nome": "Profissional",
+      "data": "08/11/2026",
+      "grupo": "GRUPO 124",
+      "hora": "17:00",
+      "id_jogo": "835311",
+      "local": "São Januário - Rio de Janeiro - RJ",
+      "mandante": {
+        "id": "60646",
+        "nome": "Vasco da Gama Saf",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
+      },
+      "num_jogo": "154",
+      "rodada": "2",
+      "transmissoes": [
+        "Amazon Prime",
+        "GE TV",
+        "Globo",
+        "Premiere",
+        "Sportv"
+      ],
+      "visitante": {
+        "id": "20002",
+        "nome": "Palmeiras",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20002/escudo.jpg"
+      }
     }
   ]
 }
