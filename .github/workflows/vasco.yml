@@ -5,7 +5,12 @@ on:
     # Horários em UTC (o GitHub não aceita fuso). Brasília = UTC-3.
     - cron: "0 11 * * *"   # 08:00 BRT — sync
     - cron: "0 23 * * *"   # 20:00 BRT — sync
-    - cron: "0 12 * * *"   # 09:00 BRT — lembrete do dia
+    # O lembrete roda três vezes porque o GitHub chega a atrasar o cron em horas; o
+    # primeiro que rodar envia e os outros veem data/lembretes.json e não repetem.
+    # Minuto 17 para fugir do pico de disparos na hora cheia.
+    - cron: "17 6 * * *"   # 03:17 BRT — lembrete do dia
+    - cron: "17 9 * * *"   # 06:17 BRT — lembrete (reserva)
+    - cron: "17 12 * * *"  # 09:17 BRT — lembrete (reserva)
   workflow_dispatch:
     inputs:
       comando:
@@ -31,7 +36,12 @@ jobs:
   monitorar:
     runs-on: ubuntu-latest
     steps:
+      # A ponta do branch, não o commit que existia quando o run foi criado: um
+      # lembrete que ficou na fila atrás de outro precisa ver o lembretes.json que
+      # esse outro acabou de commitar, senão manda a mensagem de novo.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
       - uses: actions/setup-python@v5
         with:
@@ -43,7 +53,7 @@ jobs:
       - name: Decidir o comando
         id: alvo
         env:
-          # O cron das 12:00 UTC é o do lembrete; os outros dois sincronizam.
+          # Os crons do minuto 17 são os do lembrete; os outros dois sincronizam.
           CRON: ${{ github.event.schedule }}
           ENTRADA: ${{ inputs.comando }}
           DRY: ${{ inputs.dry_run }}
@@ -51,10 +61,12 @@ jobs:
           if [ -n "$ENTRADA" ]; then
             comando="$ENTRADA"
             [ "$DRY" = "true" ] && flags="--dry-run" || flags=""
-          elif [ "$CRON" = "0 12 * * *" ]; then
-            comando="lembrete"; flags=""
           else
-            comando="sync"; flags=""
+            case "$CRON" in
+              "17 "*) comando="lembrete" ;;
+              *)      comando="sync" ;;
+            esac
+            flags=""
           fi
           echo "comando=$comando" >> "$GITHUB_OUTPUT"
           echo "flags=$flags" >> "$GITHUB_OUTPUT"

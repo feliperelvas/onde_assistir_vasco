@@ -57,10 +57,17 @@ Regras que definem o comportamento:
 |---|---|---|
 | `0 11 * * *` | 08:00 | `sync` — busca o calendário e avisa mudanças |
 | `0 23 * * *` | 20:00 | `sync` |
-| `0 12 * * *` | 09:00 | `lembrete` — avisa se hoje tem jogo |
+| `17 6 * * *` | 03:17 | `lembrete` — avisa se hoje tem jogo |
+| `17 9 * * *` | 06:17 | `lembrete` (reserva) |
+| `17 12 * * *` | 09:17 | `lembrete` (reserva) |
 
 É um único workflow, que nunca roda duas vezes ao mesmo tempo, porque os comandos escrevem em
 `data/` e pushes concorrentes dariam conflito.
+
+O lembrete é agendado três vezes porque o atraso do GitHub chega a horas. Quem rodar primeiro
+envia e grava o jogo em `data/lembretes.json`; os outros leem o arquivo e ficam calados. Para
+isso funcionar, o checkout pega a ponta do `main`, e não o commit da hora em que o run foi
+criado: um run que esperou na fila atrás de outro precisa enxergar o que esse outro commitou.
 
 Para disparar à mão: **Actions → Onde assistir o Vasco → Run workflow**, escolhendo `sync`,
 `lembrete` ou `testar`. A caixa `dry_run` vem **marcada**: assim ele só mostra no log o que faria.
@@ -68,7 +75,9 @@ Desmarque para enviar de verdade.
 
 Dois detalhes do cron do GitHub que explicam comportamentos estranhos:
 
-- **Ele atrasa.** De 5 a 30 minutos em horário de pico. O lembrete das 09:00 pode chegar 09:20.
+- **Ele atrasa, e muito.** Na prática, entre 3 e 6 horas neste repositório (em 06/10/2026 o
+  disparo das 09:00 rodou às 14:53). Às vezes ele simplesmente pula um disparo. Daí os três
+  horários de lembrete, começando de madrugada.
 - **Ele desliga após 60 dias sem atividade no repositório.** O workflow só commita quando o
   calendário muda, o que durante a temporada acontece com frequência, mas pode não acontecer no
   recesso. O GitHub avisa por e-mail antes; para religar, basta **Actions → Onde assistir o
