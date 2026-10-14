@@ -48,7 +48,7 @@ seguem normais. Aviso de novo quando voltar.
 ```
 
 Há ainda um terceiro comando, `testar`, que só existe para conferir que o token e o chat estão
-certos: manda uma mensagem fixa, sem consultar a CBF nem gravar nada.
+certos: manda uma mensagem fixa, sem consultar nenhuma fonte nem gravar nada.
 
 Regras que definem o comportamento:
 
@@ -150,8 +150,9 @@ GET https://www.cbf.com.br/api/cbf/onde-assistir/jogos
 ```
 
 O site pagina de 15 em 15, mas o backend aceita `pageSize` maior — a temporada inteira
-(~1200 jogos) cabe em uma requisição de pouco mais de um segundo. São 2 requisições por
-execução de `sync` (uma por campeonato), 4 por dia.
+(~1200 jogos) cabe em uma requisição de pouco mais de um segundo. São 2 requisições à CBF por
+execução de `sync` (uma por campeonato), 4 por dia. O FotMob recebe mais 1 a 4 por execução
+(ver abaixo).
 
 A janela vai de 7 dias atrás a 400 dias à frente, para pegar a temporada seguinte assim que a CBF
 publicar o calendário.
@@ -220,6 +221,8 @@ O git faz as vezes de banco de dados:
   ordenadas, sem timestamp) para que o workflow commite **somente** quando algo mudou de verdade.
 - **`data/lembretes.json`** — IDs de jogos já lembrados, para não avisar duas vezes. É podado a
   cada execução para não crescer sem fim. Só aparece depois do primeiro lembrete.
+- **`data/alertas.json`** — fonte com problema já avisado no Telegram (hoje, só o FotMob) e o erro.
+  Só existe enquanto o problema está em aberto: é apagado quando a fonte volta e o bot avisa.
 
 Na **primeira execução**, sem snapshot, o monitor grava a linha de base e não notifica nada, em
 vez de despejar o calendário inteiro no chat.
