@@ -5,9 +5,10 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+from dataclasses import replace
 from datetime import datetime
 
-from . import cbf, config, conmebol, render, storage, telegram
+from . import cbf, config, fotmob, render, storage, telegram
 from .diff import comparar
 from .filtros import jogos_do_vasco
 from .models import Jogo
@@ -39,14 +40,68 @@ def _resumir(jogos: list[Jogo]) -> None:
         print(f"      TV: {jogo.onde_assistir}")
 
 
+FONTE_FOTMOB = "FotMob"
+
+
+def _do_fotmob(jogo: Jogo) -> bool:
+    return jogo.id_jogo.startswith("fotmob-")
+
+
+def _manter_transmissoes(novos: list[Jogo], anteriores: list[Jogo]) -> list[Jogo]:
+    """O guia de TV do FotMob só cobre 7 dias a partir de hoje.
+
+    Sem isto, o jogo que acabou de sair do guia (ou que sumiu dele por um
+    soluço) perderia os canais e geraria um aviso falso de transmissão.
+    """
+    canais = {jogo.id_jogo: jogo.transmissoes for jogo in anteriores}
+    return [
+        replace(jogo, transmissoes=canais[jogo.id_jogo])
+        if not jogo.transmissoes and canais.get(jogo.id_jogo)
+        else jogo
+        for jogo in novos
+    ]
+
+
+def _buscar_fotmob(inicio, fim, anterior: list[Jogo]) -> tuple[list[Jogo], str | None]:
+    """Jogos do FotMob e o erro, se houve.
+
+    Diferente da CBF, falha aqui não aborta o run: o FotMob não é oficial e pode
+    bloquear a qualquer hora, e isso não pode derrubar Brasileirão e Copa do
+    Brasil. Os jogos dele ficam como estavam no snapshot — sem isso seriam
+    anunciados como "saiu do calendário".
+    """
+    try:
+        return _manter_transmissoes(fotmob.buscar_todos(inicio, fim), anterior), None
+    except fotmob.ErroFotMob as erro:
+        log.error("FotMob: %s", erro)
+        return [jogo for jogo in anterior if _do_fotmob(jogo)], str(erro)
+
+
+def _avisar_fonte(fonte: str, erro: str | None, dry_run: bool) -> None:
+    """Avisa só na mudança de estado: quando quebra e quando volta."""
+    alertas = storage.carregar_alertas()
+    if erro and fonte not in alertas:
+        _entregar([render.mensagem_fonte_com_problema(fonte, erro)], dry_run)
+        alertas[fonte] = erro
+    elif not erro and fonte in alertas:
+        _entregar([render.mensagem_fonte_voltou(fonte)], dry_run)
+        del alertas[fonte]
+    else:
+        return
+    if not dry_run:
+        storage.salvar_alertas(alertas)
+
+
 def comando_sync(args: argparse.Namespace) -> int:
     inicio, fim = cbf.janela_padrao()
     log.info("Buscando jogos de %s a %s", inicio, fim)
-    # Se uma das fontes falhar, o run aborta: seguir só com a outra faria os
-    # jogos da que falhou serem anunciados como "saiu do calendário".
-    jogos = jogos_do_vasco(cbf.buscar_todos(inicio, fim) + conmebol.buscar_todos(inicio, fim))
-
+    # Falha da CBF aborta o run (ErroCBF sobe até main); a do FotMob, não.
+    da_cbf = cbf.buscar_todos(inicio, fim)
     anterior = storage.carregar_snapshot()
+    do_fotmob, erro_fotmob = _buscar_fotmob(inicio, fim, anterior or [])
+    jogos = jogos_do_vasco(da_cbf + do_fotmob)
+    _avisar_fonte(FONTE_FOTMOB, erro_fotmob, args.dry_run)
+
     if anterior is None:
         # Primeira execução: notificar tudo viraria um despejo do calendário
         # inteiro. Só registramos a linha de base.
@@ -117,7 +172,7 @@ def construir_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="vascotv",
-        description="Monitora onde assistir os jogos do Vasco nos sites da CBF e da CONMEBOL.",
+        description="Monitora onde assistir os jogos do Vasco (CBF e FotMob).",
         parents=[comuns],
     )
     sub = parser.add_subparsers(dest="comando", required=True)
@@ -143,7 +198,7 @@ def main(argv: list[str] | None = None) -> int:
     acoes = {"sync": comando_sync, "lembrete": comando_lembrete, "testar": comando_testar}
     try:
         return acoes[args.comando](args)
-    except (cbf.ErroCBF, conmebol.ErroCONMEBOL, telegram.ErroTelegram) as erro:
+    except (cbf.ErroCBF, telegram.ErroTelegram) as erro:
         log.error("%s", erro)
         return 1
 

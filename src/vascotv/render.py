@@ -110,3 +110,22 @@ def mensagem_lembrete(jogos: list[Jogo]) -> str:
             linhas.append(AVISO_CATEGORIA.format(escape(jogo.categoria_id)))
         blocos.append("\n".join(linhas))
     return "\n\n".join(blocos)
+
+
+def mensagem_fonte_com_problema(fonte: str, erro: str) -> str:
+    return "\n".join(
+        [
+            f"⚠️ <b>Problema ao consultar o {escape(fonte)}</b>",
+            f"<code>{escape(erro[:300])}</code>",
+            "",
+            "Os jogos da Sul-Americana ficam como estavam até a fonte voltar; "
+            "Brasileirão e Copa do Brasil seguem normais. Aviso de novo quando voltar.",
+        ]
+    )
+
+
+def mensagem_fonte_voltou(fonte: str) -> str:
+    return (
+        f"✅ <b>O {escape(fonte)} voltou a responder</b>\n"
+        "A Sul-Americana volta a ser atualizada."
+    )

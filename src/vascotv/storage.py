@@ -45,3 +45,20 @@ def carregar_lembretes(caminho: Path | None = None) -> set[str]:
 def salvar_lembretes(ids: set[str], caminho: Path | None = None) -> None:
     caminho = caminho or config.LEMBRETES_PATH
     _escrever(caminho, {"enviados": sorted(ids)})
+
+
+def carregar_alertas(caminho: Path | None = None) -> dict[str, str]:
+    """Fontes com problema já avisado no Telegram -> erro avisado."""
+    caminho = caminho or config.ALERTAS_PATH
+    if not caminho.exists():
+        return {}
+    return dict(json.loads(caminho.read_text(encoding="utf-8")).get("com_problema", {}))
+
+
+def salvar_alertas(alertas: dict[str, str], caminho: Path | None = None) -> None:
+    caminho = caminho or config.ALERTAS_PATH
+    if not alertas:
+        # Sem problema em aberto, o arquivo nem precisa existir.
+        caminho.unlink(missing_ok=True)
+        return
+    _escrever(caminho, {"com_problema": alertas})
