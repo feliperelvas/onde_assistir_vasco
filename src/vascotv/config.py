@@ -27,13 +27,48 @@ CAMPEONATOS = {
 #   1008 Copa Verde            1032 Liga de Desenvolvimento
 #   1067 Copa Sul-Sudeste
 
+# Jogos do FotMob não têm categoria; as ligas acompanhadas lá são só de
+# profissionais, então todo jogo de lá recebe esta (ver vascotv.fotmob).
+CATEGORIA_FOTMOB = "fotmob"
+
 # Allowlist em vez de blocklist: continua correto se o Vasco cair para a Série B.
 #   1 Série A · 2 Série B · 3 Série C · 5 Série D · 4 Profissional (Copa do Brasil)
-CATEGORIAS_PROFISSIONAIS = {"1", "2", "3", "4", "5"}
+CATEGORIAS_PROFISSIONAIS = {"1", "2", "3", "4", "5", CATEGORIA_FOTMOB}
 
 # Categorias que sabidamente NÃO são o time profissional masculino.
 #   55 Feminino · 56 Sub-20 · 62 SUB17 · 97 Sub-15
 CATEGORIAS_BASE = {"55", "56", "62", "97"}
+
+# --- FotMob -----------------------------------------------------------------
+# A Sul-Americana não está na CBF, e o site da CONMEBOL barra o runner do GitHub
+# (firewall anti-robô) e escolhe as emissoras pelo país de quem acessa. O FotMob
+# não é oficial, mas tem um guia de TV por país com o país na URL. Os termos do
+# site não permitem uso automatizado: se ele bloquear, o bot avisa no Telegram e
+# segue com a CBF (ver vascotv.fotmob e cli.comando_sync).
+FOTMOB_URL = "https://www.fotmob.com"
+FOTMOB_VASCO_ID = "10276"
+FOTMOB_PAIS = "br"
+
+# leagueId do FotMob -> nome na mensagem. O ID é da competição, não da edição,
+# então não muda de um ano para o outro (é o número em fotmob.com/leagues/<ID>/...).
+FOTMOB_LIGAS = {
+    "299": "Copa Sul-Americana",
+}
+
+# Fases como vêm do FotMob -> como aparecem na mensagem.
+FOTMOB_FASES = {
+    "Group Stage": "Fase de grupos",
+    "1st Round": "Primeira fase",
+    "Knockout Round Play-offs": "Playoffs das oitavas",
+    "Round of 16": "Oitavas de final",
+    "8th Finals": "Oitavas de final",
+    "Quarter-finals": "Quartas de final",
+    "Semi-finals": "Semifinal",
+    "Final": "Final",
+}
+
+# O guia usa isto no lugar do nome quando ainda não há canal.
+FOTMOB_SEM_CANAL = {"Canal a confirmar"}
 
 # --- API --------------------------------------------------------------------
 API_URL = "https://www.cbf.com.br/api/cbf/onde-assistir/jogos"
@@ -61,3 +96,4 @@ FUSO = ZoneInfo("America/Sao_Paulo")
 # --- Estado -----------------------------------------------------------------
 SNAPSHOT_PATH = ROOT / "data" / "jogos.json"
 LEMBRETES_PATH = ROOT / "data" / "lembretes.json"
+ALERTAS_PATH = ROOT / "data" / "alertas.json"

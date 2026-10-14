@@ -1,0 +1,313 @@
+{
+  "teams": {
+    "details": {
+      "id": 10276,
+      "name": "Vasco da Gama"
+    },
+    "fixtures": {
+      "allFixtures": {
+        "fixtures": [
+          {
+            "id": 1000021775,
+            "pageUrl": "/matches/boca-juniors-vs-vasco-da-gama/3fbsdh#1000021775",
+            "opponent": {
+              "id": 10077,
+              "name": "Boca Juniors",
+              "score": 0
+            },
+            "home": {
+              "id": 10077,
+              "name": "Boca Juniors",
+              "score": 0
+            },
+            "away": {
+              "id": 10276,
+              "name": "Vasco da Gama",
+              "score": 1
+            },
+            "displayTournament": true,
+            "result": 1,
+            "notStarted": false,
+            "tournament": {
+              "name": "Copa Sudamericana",
+              "stage": "",
+              "leagueId": 299
+            },
+            "status": {
+              "utcTime": "2026-10-14T00:30:00.000Z",
+              "finished": true,
+              "started": true,
+              "cancelled": false,
+              "awarded": false,
+              "scoreStr": "0 - 1",
+              "reason": {
+                "short": "FT",
+                "shortKey": "fulltime_short",
+                "long": "Full-Time",
+                "longKey": "finished"
+              }
+            }
+          },
+          {
+            "id": 5103666,
+            "pageUrl": "/matches/vasco-da-gama-vs-sao-paulo/3hrgs2#5103666",
+            "opponent": {
+              "id": 10277,
+              "name": "São Paulo",
+              "score": 0
+            },
+            "home": {
+              "id": 10277,
+              "name": "São Paulo",
+              "score": 0
+            },
+            "away": {
+              "id": 10276,
+              "name": "Vasco da Gama",
+              "score": 0
+            },
+            "displayTournament": false,
+            "notStarted": true,
+            "tournament": {
+              "name": "Série A",
+              "stage": "",
+              "leagueId": 268
+            },
+            "status": {
+              "utcTime": "2026-10-18T00:00:00.000Z",
+              "started": false,
+              "cancelled": false,
+              "finished": false
+            }
+          },
+          {
+            "id": 1000021776,
+            "pageUrl": "/matches/boca-juniors-vs-vasco-da-gama/3fbsdh#1000021776",
+            "opponent": {
+              "id": 10077,
+              "name": "Boca Juniors",
+              "score": 0
+            },
+            "home": {
+              "id": 10276,
+              "name": "Vasco da Gama",
+              "score": 0
+            },
+            "away": {
+              "id": 10077,
+              "name": "Boca Juniors",
+              "score": 0
+            },
+            "displayTournament": true,
+            "notStarted": true,
+            "tournament": {
+              "name": "Copa Sudamericana",
+              "stage": "",
+              "leagueId": 299
+            },
+            "status": {
+              "utcTime": "2026-10-21T00:30:00.000Z",
+              "started": false,
+              "cancelled": false,
+              "finished": false
+            }
+          },
+          {
+            "id": 5103735,
+            "pageUrl": "/matches/vitoria-vs-vasco-da-gama/2ok1y2#5103735",
+            "opponent": {
+              "id": 7733,
+              "name": "Vitória",
+              "score": 0
+            },
+            "home": {
+              "id": 10276,
+              "name": "Vasco da Gama",
+              "score": 0
+            },
+            "away": {
+              "id": 7733,
+              "name": "Vitória",
+              "score": 0
+            },
+            "displayTournament": false,
+            "notStarted": true,
+            "tournament": {
+              "name": "Série A",
+              "stage": "",
+              "leagueId": 268
+            },
+            "status": {
+              "utcTime": "2026-12-02T00:00:00.000Z",
+              "matchDateTbd": true,
+              "matchTimeTbd": false,
+              "started": false,
+              "cancelled": false,
+              "finished": false
+            }
+          }
+        ]
+      }
+    }
+  },
+  "tvguide": {
+    "20261017": [
+      {
+        "key": 1000001407,
+        "leagueId": 268,
+        "leagueName": "Série A",
+        "leagueStage": "31",
+        "leagueCcode": "BRA",
+        "matches": [
+          {
+            "id": 5103666,
+            "utcTime": "2026-10-18T00:00:00.000Z",
+            "home": {
+              "id": 10277,
+              "name": "São Paulo"
+            },
+            "away": {
+              "id": 10276,
+              "name": "Vasco da Gama"
+            },
+            "leagueName": "Série A",
+            "leagueCcode": "BRA",
+            "leagueId": 268,
+            "channels": [
+              {
+                "name": "SporTV",
+                "imageUrl": null,
+                "affiliates": []
+              },
+              {
+                "name": "Premiere",
+                "imageUrl": null,
+                "affiliates": []
+              }
+            ],
+            "isLive": false
+          }
+        ]
+      }
+    ],
+    "20261020": [
+      {
+        "key": 1000001660,
+        "leagueId": 299,
+        "leagueName": "Copa Sudamericana - Semi-finals",
+        "leagueStage": "Semi-finals",
+        "leagueCcode": "INT",
+        "matches": [
+          {
+            "id": 1000021776,
+            "utcTime": "2026-10-21T00:30:00.000Z",
+            "home": {
+              "id": 10276,
+              "name": "Vasco da Gama"
+            },
+            "away": {
+              "id": 10077,
+              "name": "Boca Juniors"
+            },
+            "leagueName": "Copa Sudamericana - Semi-finals",
+            "leagueCcode": "INT",
+            "leagueId": 299,
+            "channels": [
+              {
+                "name": "SBT",
+                "imageUrl": null,
+                "affiliates": []
+              },
+              {
+                "name": "Paramount+",
+                "imageUrl": null,
+                "affiliates": []
+              }
+            ],
+            "isLive": false
+          }
+        ]
+      }
+    ],
+    "20261016": [
+      {
+        "key": 1,
+        "leagueId": 1,
+        "leagueName": "X",
+        "leagueStage": "",
+        "leagueCcode": "BRA",
+        "matches": [
+          {
+            "id": 999,
+            "utcTime": "2026-10-16T22:00:00.000Z",
+            "home": {
+              "id": 1,
+              "name": "A"
+            },
+            "away": {
+              "id": 2,
+              "name": "B"
+            },
+            "leagueName": "X",
+            "leagueCcode": "BRA",
+            "leagueId": 1,
+            "channels": [
+              {
+                "name": "Canal a confirmar",
+                "imageUrl": null,
+                "affiliates": []
+              }
+            ],
+            "isLive": false
+          }
+        ]
+      }
+    ]
+  },
+  "matchDetails_1000021776": {
+    "general": {
+      "matchId": "1000021776",
+      "matchRound": "Semi-finals",
+      "leagueId": 299,
+      "leagueName": "CONMEBOL Sudamericana"
+    },
+    "content": {
+      "matchFacts": {
+        "infoBox": {
+          "legInfo": {
+            "bestOf": 2,
+            "bestOfNum": 2,
+            "localizedString": {
+              "key": "second_leg",
+              "fallback": "2nd leg"
+            },
+            "linkToOtherLeg": "/matches/boca-juniors-vs-vasco-da-gama/3fbsdh#1000021775"
+          },
+          "Match Date": {
+            "utcTime": "2026-10-21T00:30:00.000Z",
+            "isDateCorrect": true
+          },
+          "Tournament": {
+            "id": 299,
+            "parentLeagueId": 299,
+            "link": "/leagues/299/overview/conmebol-sudamericana",
+            "leagueName": "CONMEBOL Sudamericana",
+            "roundName": "Semi-finals",
+            "round": "Semi-finals"
+          },
+          "Stadium": {
+            "name": "Estadio Jornalista Mário Filho (Maracanã)",
+            "city": "Rio de Janeiro, Rio de Janeiro",
+            "country": "Brazil",
+            "lat": -22.91206776,
+            "long": -43.230133653,
+            "capacity": 78838,
+            "surface": "grass"
+          },
+          "Referee": null,
+          "Attendance": null
+        }
+      }
+    }
+  }
+}

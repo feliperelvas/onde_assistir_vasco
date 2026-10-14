@@ -1,15 +1,17 @@
 # Onde assistir o Vasco
 
-Bot de Telegram que acompanha o calendário da CBF e avisa **onde assistir os jogos do time
-profissional do Vasco** no Campeonato Brasileiro e na Copa do Brasil. Roda sozinho e de graça no
+Bot de Telegram que acompanha o calendário da CBF (e o do FotMob, para a Sul-Americana) e avisa **onde assistir os
+jogos do time profissional do Vasco** no Campeonato Brasileiro, na Copa do Brasil e na Copa
+Sul-Americana. Roda sozinho e de graça no
 GitHub Actions: nenhum servidor, nenhum banco de dados.
 
 ## O que o bot faz
 
-Ele manda duas mensagens, e só elas. No resto do tempo fica calado.
+Ele manda duas mensagens no dia a dia, e um aviso se a fonte da Sul-Americana der problema. No
+resto do tempo fica calado.
 
-**Mudanças no calendário** — quando a CBF publica uma rodada nova, remarca um jogo, troca a
-transmissão ou o estádio, ou tira um jogo do calendário. Vários eventos da mesma execução vão
+**Mudanças no calendário** — quando a CBF ou o FotMob publica uma rodada nova, remarca um
+jogo, troca a transmissão ou o estádio, ou tira um jogo do calendário. Vários eventos da mesma execução vão
 juntos em uma mensagem:
 
 ```
@@ -32,6 +34,17 @@ juntos em uma mensagem:
 🕐 20:30 (horário de Brasília)
 🏟 Nilton Santos — Rio de Janeiro, RJ
 📺 Amazon Prime
+```
+
+**Problema na fonte** — só quando o FotMob, de onde vem a Sul-Americana, falha (e de novo
+quando volta). O resto do bot segue normal:
+
+```
+⚠️ Problema ao consultar o FotMob
+/api/data/teams falhou após 3 tentativas: resposta não é JSON (HTTP 202, text/html)
+
+Os jogos da Sul-Americana ficam como estavam até a fonte voltar; Brasileirão e Copa do Brasil
+seguem normais. Aviso de novo quando voltar.
 ```
 
 Há ainda um terceiro comando, `testar`, que só existe para conferir que o token e o chat estão
@@ -143,6 +156,36 @@ execução de `sync` (uma por campeonato), 4 por dia.
 A janela vai de 7 dias atrás a 400 dias à frente, para pegar a temporada seguinte assim que a CBF
 publicar o calendário.
 
+### Sul-Americana: o FotMob
+
+A Sul-Americana não está na CBF, e a fonte oficial não serve: o site da CONMEBOL
+(`gol.conmebol.com`) bloqueia o runner do GitHub com um desafio anti-robô (AWS WAF, HTTP 202
+vazio) e, mesmo quando responde, escolhe as emissoras pelo país de quem acessa — do runner, nos
+EUA, viriam as americanas. O ge.globo omite emissoras concorrentes da Globo (SBT, Record,
+CazéTV) e o site do Vasco não informa TV.
+
+Por isso a Sul-Americana vem do **FotMob**, que não é oficial, em três consultas JSON:
+
+```
+GET https://www.fotmob.com/api/data/teams?id=10276                 temporada do Vasco
+GET https://www.fotmob.com/api/data/tvguide?country=br&timezone=…  canais no Brasil, 7 dias
+GET https://www.fotmob.com/api/data/matchDetails?matchId=…         estádio, fase, ida/volta
+```
+
+O país vai na URL, então a resposta é a mesma de qualquer lugar. O guia de TV cobre só os
+próximos 7 dias: antes disso o jogo aparece como "Não informado", e quando o canal entra no guia
+o bot avisa a mudança. Depois que o jogo sai do guia, os canais anteriores são mantidos.
+
+**Os termos do FotMob não permitem uso automatizado.** O bot faz poucas consultas por dia, mas
+o FotMob pode bloquear ou mudar a API sem aviso. Por isso uma falha dele **não derruba o resto**:
+Brasileirão e Copa do Brasil seguem normais, os jogos da Sul-Americana ficam como estavam, e o bot
+manda **um** aviso no Telegram quando o problema começa e outro quando o FotMob volta (o problema
+em aberto fica em `data/alertas.json`, para não repetir o aviso a cada execução).
+
+As ligas acompanhadas ficam em `FOTMOB_LIGAS` no [`config.py`](src/vascotv/config.py). O ID é
+da competição (`299` = Sul-Americana, o número em `fotmob.com/leagues/299/...`), então não muda
+de um ano para o outro.
+
 ### Profissional vs. base: a regra que parece simples e não é
 
 Filtrar pelo time **não** separa o profissional das categorias de base. Série A, Sub-20, SUB17 e
@@ -193,7 +236,8 @@ nada:
 - **O token nunca vai para o log.** Ele faz parte da URL da API do Telegram, então em caso de
   erro o bot registra só o código HTTP e a descrição devolvida, nunca a URL
   ([`telegram.py`](src/vascotv/telegram.py)).
-- **`data/` contém só dados públicos da CBF** (jogos, estádios, transmissões) e IDs de jogo.
+- **`data/` contém só dados públicos da CBF e do FotMob** (jogos, estádios, transmissões), IDs
+  de jogo e, se houver, o problema em aberto com o FotMob.
 - **O `.pem` em `certs/` é um certificado público de CA**, não uma chave privada.
 - `.env` está no `.gitignore`, caso você guarde as variáveis num arquivo para rodar localmente.
 
@@ -204,7 +248,8 @@ Quem fizer fork recebe o código, mas não os secrets: precisa criar o próprio 
 ```
 src/vascotv/
   config.py    IDs, categorias, janela, fuso — tudo que muda de temporada
-  cbf.py       cliente da API (retry, paginação)
+  cbf.py       cliente da API da CBF (retry, paginação)
+  fotmob.py    cliente do FotMob (Sul-Americana)
   tls.py       o bundle de certificados que contorna a cadeia da CBF
   models.py    o jogo normalizado
   filtros.py   Vasco? profissional?
@@ -213,7 +258,7 @@ src/vascotv/
   telegram.py  envio
   storage.py   leitura e escrita de data/
   cli.py       `sync`, `lembrete` e `testar`
-tests/         60 testes com respostas reais da API gravadas em fixtures/
+tests/         77 testes com respostas reais das APIs gravadas em fixtures/
 ```
 
 ## Custo, e por que GitHub Actions
@@ -229,3 +274,6 @@ e Val Town ou Deno Deploy Cron precisariam de armazenamento externo.
 `1026` Supercopa do Brasil, `1016` Brasileiro Feminino, `1001` Copa do Nordeste, `1008` Copa
 Verde, `1032` Liga de Desenvolvimento, `1067` Copa Sul-Sudeste. Estaduais não entram — a CBF não
 os publica nesse endpoint.
+
+Outras competições do Vasco fora da CBF (Libertadores, por exemplo) entram com o `leagueId` do
+FotMob em `FOTMOB_LIGAS`.

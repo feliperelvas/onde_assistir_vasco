@@ -156,11 +156,18 @@ class Jogo:
         return campeonato
 
     @property
+    def etapa(self) -> str:
+        """'rodada 29' na CBF; no FotMob a fase já vem por extenso ('Semifinal')."""
+        if self.rodada.isdigit():
+            return f"rodada {self.rodada}"
+        return self.rodada
+
+    @property
     def data_hora_curta(self) -> str:
         """Ex.: '07/10 (qua) 20:30'."""
         inicio = self.inicio
         if inicio is None:
-            return f"{self.data} {self.hora}".strip()
+            return f"{self.data} {self.hora}".strip() or "data a definir"
         dia = DIAS_SEMANA[inicio.weekday()]
         return f"{inicio:%d/%m} ({dia}) {inicio:%H:%M}"
 

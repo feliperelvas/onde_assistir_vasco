@@ -4,7 +4,16 @@ from datetime import datetime
 
 import pytest
 
-from vascotv import cbf, cli, config, storage, telegram
+from vascotv import cbf, cli, config, diff, fotmob, storage, telegram
+
+
+class _RelogioParado(datetime):
+    """Os jogos da fixture são de outubro/2026; com o relógio real eles viram
+    passado e o diff deixa de avisar sobre eles."""
+
+    @classmethod
+    def now(cls, tz=None):
+        return datetime(2026, 9, 28, 10, 0, tzinfo=tz or config.FUSO)
 
 
 @pytest.fixture
@@ -13,7 +22,11 @@ def ambiente(tmp_path, monkeypatch):
     enviadas: list[str] = []
     monkeypatch.setattr(config, "SNAPSHOT_PATH", tmp_path / "jogos.json")
     monkeypatch.setattr(config, "LEMBRETES_PATH", tmp_path / "lembretes.json")
+    monkeypatch.setattr(config, "ALERTAS_PATH", tmp_path / "alertas.json")
     monkeypatch.setattr(telegram, "enviar", lambda texto, **kw: enviadas.append(texto))
+    monkeypatch.setattr(diff, "datetime", _RelogioParado)
+    # Os testes que precisam do FotMob sobrescrevem; os outros não tocam a rede.
+    monkeypatch.setattr(fotmob, "buscar_todos", lambda *a, **kw: [])
     return enviadas
 
 
@@ -75,6 +88,95 @@ def test_falha_da_api_devolve_codigo_de_erro(ambiente, monkeypatch):
     monkeypatch.setattr(cbf, "buscar_todos", explode)
 
     assert cli.main(["sync"]) == 1
+
+
+def _boca(fazer_jogo, **alteracoes):
+    base = dict(
+        id_jogo="fotmob-1000021776",
+        data="20/10/2026",
+        hora="21:30",
+        rodada="Semifinal · volta",
+        local="Estadio Jornalista Mário Filho (Maracanã) - Rio de Janeiro",
+        mandante={"id": config.VASCO_ID, "nome": "Vasco da Gama"},
+        visitante={"id": "fotmob:10077", "nome": "Boca Juniors"},
+        transmissoes=[{"nome": "SBT"}, {"nome": "Paramount+"}],
+        competicao={"campeonato_nome": "Copa Sul-Americana", "categoria_id": "fotmob"},
+    )
+    base.update(alteracoes)
+    return fazer_jogo(**base)
+
+
+def _fotmob_falha(monkeypatch):
+    def explode(*a, **kw):
+        raise fotmob.ErroFotMob("/api/data/teams falhou: resposta não é JSON")
+
+    monkeypatch.setattr(fotmob, "buscar_todos", explode)
+
+
+def test_jogo_novo_da_sul_americana_e_notificado(ambiente, monkeypatch, jogos, fazer_jogo):
+    _com_api(monkeypatch, jogos)
+    cli.main(["sync"])
+
+    monkeypatch.setattr(fotmob, "buscar_todos", lambda *a, **kw: [_boca(fazer_jogo)])
+    assert cli.main(["sync"]) == 0
+
+    (mensagem,) = ambiente
+    assert "Jogo novo no calendário" in mensagem
+    assert "Copa Sul-Americana — Semifinal · volta" in mensagem
+    assert "Paramount+, SBT" in mensagem
+    assert "desconhecida" not in mensagem
+
+
+def test_falha_do_fotmob_avisa_uma_vez_e_segue_com_a_cbf(ambiente, monkeypatch, jogos, fazer_jogo):
+    """O FotMob não é oficial e pode bloquear; isso não pode derrubar a CBF."""
+    _com_api(monkeypatch, jogos)
+    monkeypatch.setattr(fotmob, "buscar_todos", lambda *a, **kw: [_boca(fazer_jogo)])
+    cli.main(["sync"])
+
+    _fotmob_falha(monkeypatch)
+    remarcado = [fazer_jogo(hora="21:30") if j.id_jogo == "832172" else j for j in jogos]
+    monkeypatch.setattr(cbf, "buscar_todos", lambda *a, **kw: remarcado)
+
+    assert cli.main(["sync"]) == 0
+    aviso, calendario = ambiente
+    assert "Problema ao consultar o FotMob" in aviso
+    assert "não é JSON" in aviso
+    # A CBF seguiu normal e o jogo do FotMob não foi dado como removido.
+    assert "20:30</s> → <b>21:30" in calendario
+    assert "saiu do calendário" not in calendario
+    assert "fotmob-1000021776" in {j.id_jogo for j in storage.carregar_snapshot()}
+
+    # Segunda falha seguida: sem aviso repetido.
+    assert cli.main(["sync"]) == 0
+    assert len(ambiente) == 2
+
+
+def test_fotmob_voltando_avisa(ambiente, monkeypatch, jogos, fazer_jogo):
+    _com_api(monkeypatch, jogos)
+    cli.main(["sync"])
+    _fotmob_falha(monkeypatch)
+    cli.main(["sync"])
+
+    monkeypatch.setattr(fotmob, "buscar_todos", lambda *a, **kw: [])
+    assert cli.main(["sync"]) == 0
+
+    assert "voltou a responder" in ambiente[-1]
+    assert not config.ALERTAS_PATH.exists()
+
+
+def test_jogo_que_sai_do_guia_de_tv_mantem_os_canais(ambiente, monkeypatch, jogos, fazer_jogo):
+    """O guia só cobre 7 dias; perder os canais geraria aviso falso."""
+    _com_api(monkeypatch, jogos)
+    monkeypatch.setattr(fotmob, "buscar_todos", lambda *a, **kw: [_boca(fazer_jogo)])
+    cli.main(["sync"])
+
+    sem_canal = _boca(fazer_jogo, transmissoes=[])
+    monkeypatch.setattr(fotmob, "buscar_todos", lambda *a, **kw: [sem_canal])
+    assert cli.main(["sync"]) == 0
+
+    assert ambiente == []
+    (boca,) = [j for j in storage.carregar_snapshot() if j.id_jogo == "fotmob-1000021776"]
+    assert boca.onde_assistir == "Paramount+, SBT"
 
 
 def test_falha_no_envio_preserva_o_snapshot_antigo(ambiente, monkeypatch, jogos, fazer_jogo):
