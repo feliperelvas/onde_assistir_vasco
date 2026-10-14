@@ -4,7 +4,16 @@ from datetime import datetime
 
 import pytest
 
-from vascotv import cbf, cli, config, storage, telegram
+from vascotv import cbf, cli, config, conmebol, diff, storage, telegram
+
+
+class _RelogioParado(datetime):
+    """Os jogos da fixture são de outubro/2026; com o relógio real eles viram
+    passado e o diff deixa de avisar sobre eles."""
+
+    @classmethod
+    def now(cls, tz=None):
+        return datetime(2026, 9, 28, 10, 0, tzinfo=tz or config.FUSO)
 
 
 @pytest.fixture
@@ -14,6 +23,9 @@ def ambiente(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "SNAPSHOT_PATH", tmp_path / "jogos.json")
     monkeypatch.setattr(config, "LEMBRETES_PATH", tmp_path / "lembretes.json")
     monkeypatch.setattr(telegram, "enviar", lambda texto, **kw: enviadas.append(texto))
+    monkeypatch.setattr(diff, "datetime", _RelogioParado)
+    # Os testes que precisam da CONMEBOL sobrescrevem; os outros não tocam a rede.
+    monkeypatch.setattr(conmebol, "buscar_todos", lambda *a, **kw: [])
     return enviadas
 
 
@@ -75,6 +87,45 @@ def test_falha_da_api_devolve_codigo_de_erro(ambiente, monkeypatch):
     monkeypatch.setattr(cbf, "buscar_todos", explode)
 
     assert cli.main(["sync"]) == 1
+
+
+def test_falha_da_conmebol_aborta_sem_mexer_no_snapshot(ambiente, monkeypatch, jogos):
+    """Seguir só com a CBF faria os jogos da Sul-Americana 'saírem do calendário'."""
+    _com_api(monkeypatch, jogos)
+    cli.main(["sync"])
+    antes = config.SNAPSHOT_PATH.read_text(encoding="utf-8")
+
+    def explode(*a, **kw):
+        raise conmebol.ErroCONMEBOL("site fora do ar")
+
+    monkeypatch.setattr(conmebol, "buscar_todos", explode)
+
+    assert cli.main(["sync"]) == 1
+    assert ambiente == []
+    assert config.SNAPSHOT_PATH.read_text(encoding="utf-8") == antes
+
+
+def test_jogo_novo_da_sul_americana_e_notificado(ambiente, monkeypatch, jogos, fazer_jogo):
+    _com_api(monkeypatch, jogos)
+    cli.main(["sync"])
+
+    novo = fazer_jogo(
+        id_jogo="conmebol-1719",
+        data="20/10/2026",
+        hora="21:30",
+        rodada="Semifinal",
+        mandante={"id": config.VASCO_ID, "nome": "Vasco da Gama"},
+        visitante={"id": "conmebol:53", "nome": "Boca Juniors"},
+        competicao={"campeonato_nome": "Copa Sul-Americana", "categoria_id": "conmebol"},
+    )
+    monkeypatch.setattr(conmebol, "buscar_todos", lambda *a, **kw: [novo])
+
+    assert cli.main(["sync"]) == 0
+
+    (mensagem,) = ambiente
+    assert "Jogo novo no calendário" in mensagem
+    assert "Copa Sul-Americana — Semifinal" in mensagem
+    assert "desconhecida" not in mensagem
 
 
 def test_falha_no_envio_preserva_o_snapshot_antigo(ambiente, monkeypatch, jogos, fazer_jogo):

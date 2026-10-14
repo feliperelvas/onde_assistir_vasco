@@ -7,7 +7,7 @@ import logging
 import sys
 from datetime import datetime
 
-from . import cbf, config, render, storage, telegram
+from . import cbf, config, conmebol, render, storage, telegram
 from .diff import comparar
 from .filtros import jogos_do_vasco
 from .models import Jogo
@@ -35,14 +35,16 @@ def _resumir(jogos: list[Jogo]) -> None:
     print(f"\n{len(jogos)} jogo(s) do Vasco profissional na janela:")
     for jogo in jogos:
         print(f"  {jogo.data_hora_curta}  {jogo.confronto}")
-        print(f"      {jogo.competicao} — rodada {jogo.rodada} | {jogo.local_formatado}")
+        print(f"      {jogo.competicao} — {jogo.etapa} | {jogo.local_formatado}")
         print(f"      TV: {jogo.onde_assistir}")
 
 
 def comando_sync(args: argparse.Namespace) -> int:
     inicio, fim = cbf.janela_padrao()
     log.info("Buscando jogos de %s a %s", inicio, fim)
-    jogos = jogos_do_vasco(cbf.buscar_todos(inicio, fim))
+    # Se uma das fontes falhar, o run aborta: seguir só com a outra faria os
+    # jogos da que falhou serem anunciados como "saiu do calendário".
+    jogos = jogos_do_vasco(cbf.buscar_todos(inicio, fim) + conmebol.buscar_todos(inicio, fim))
 
     anterior = storage.carregar_snapshot()
     if anterior is None:
@@ -115,7 +117,7 @@ def construir_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="vascotv",
-        description="Monitora onde assistir os jogos do Vasco no site da CBF.",
+        description="Monitora onde assistir os jogos do Vasco nos sites da CBF e da CONMEBOL.",
         parents=[comuns],
     )
     sub = parser.add_subparsers(dest="comando", required=True)
@@ -141,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
     acoes = {"sync": comando_sync, "lembrete": comando_lembrete, "testar": comando_testar}
     try:
         return acoes[args.comando](args)
-    except (cbf.ErroCBF, telegram.ErroTelegram) as erro:
+    except (cbf.ErroCBF, conmebol.ErroCONMEBOL, telegram.ErroTelegram) as erro:
         log.error("%s", erro)
         return 1
 

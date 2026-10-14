@@ -27,13 +27,53 @@ CAMPEONATOS = {
 #   1008 Copa Verde            1032 Liga de Desenvolvimento
 #   1067 Copa Sul-Sudeste
 
+# Torneios da CONMEBOL não têm categoria na resposta; o torneio já é só de
+# profissionais, então todo jogo de lá recebe esta (ver vascotv.conmebol).
+CATEGORIA_CONMEBOL = "conmebol"
+
 # Allowlist em vez de blocklist: continua correto se o Vasco cair para a Série B.
 #   1 Série A · 2 Série B · 3 Série C · 5 Série D · 4 Profissional (Copa do Brasil)
-CATEGORIAS_PROFISSIONAIS = {"1", "2", "3", "4", "5"}
+CATEGORIAS_PROFISSIONAIS = {"1", "2", "3", "4", "5", CATEGORIA_CONMEBOL}
 
 # Categorias que sabidamente NÃO são o time profissional masculino.
 #   55 Feminino · 56 Sub-20 · 62 SUB17 · 97 Sub-15
 CATEGORIAS_BASE = {"55", "56", "62", "97"}
+
+# --- CONMEBOL ---------------------------------------------------------------
+# Torneios da CONMEBOL vêm do site oficial, não da CBF (ver vascotv.conmebol).
+CONMEBOL_URL = "https://gol.conmebol.com"
+# ID do Vasco no site da CONMEBOL (diferente do da CBF).
+CONMEBOL_VASCO_ID = "97"
+
+# Chave = ID da edição, que MUDA TODA TEMPORADA: é o número no fim de
+# gol.conmebol.com/sudamericana/pt-br/tournament/104 (104 = 2026). Para a
+# Libertadores, o caminho é "libertadores"; o prefixo das emissoras, confira na
+# resposta (não verificado).
+CONMEBOL_TORNEIOS = {
+    "104": {
+        "caminho": "sudamericana",
+        "nome": "Copa Sul-Americana",
+        "prefixo_emissora": "Sudamericana",
+    },
+}
+
+# A API manda as fases ora em português, ora em inglês.
+CONMEBOL_FASES = {
+    "1st Round": "Primeira fase",
+    "Knockout Round Play-offs": "Playoffs das oitavas",
+    "8th Finals": "Oitavas de final",
+    "Quarter-finals": "Quartas de final",
+    "Semi-finals": "Semifinal",
+    "Final": "Final",
+}
+
+# Nomes internos das emissoras -> como aparecem na mensagem. Uma emissora fora
+# desta lista ainda aparece, com o nome derivado do interno.
+CONMEBOL_EMISSORAS = {
+    "Sudamericana_Paramount_Brazil": "Paramount+",
+    "Sudamericana_ESPN_Disney_Brazil": "ESPN / Disney+",
+    "Sudamericana_SBT_Brazil": "SBT",
+}
 
 # --- API --------------------------------------------------------------------
 API_URL = "https://www.cbf.com.br/api/cbf/onde-assistir/jogos"

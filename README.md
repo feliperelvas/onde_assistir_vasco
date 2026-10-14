@@ -1,14 +1,15 @@
 # Onde assistir o Vasco
 
-Bot de Telegram que acompanha o calendário da CBF e avisa **onde assistir os jogos do time
-profissional do Vasco** no Campeonato Brasileiro e na Copa do Brasil. Roda sozinho e de graça no
+Bot de Telegram que acompanha os calendários da CBF e da CONMEBOL e avisa **onde assistir os
+jogos do time profissional do Vasco** no Campeonato Brasileiro, na Copa do Brasil e na Copa
+Sul-Americana. Roda sozinho e de graça no
 GitHub Actions: nenhum servidor, nenhum banco de dados.
 
 ## O que o bot faz
 
 Ele manda duas mensagens, e só elas. No resto do tempo fica calado.
 
-**Mudanças no calendário** — quando a CBF publica uma rodada nova, remarca um jogo, troca a
+**Mudanças no calendário** — quando a CBF ou a CONMEBOL publica uma rodada nova, remarca um jogo, troca a
 transmissão ou o estádio, ou tira um jogo do calendário. Vários eventos da mesma execução vão
 juntos em uma mensagem:
 
@@ -143,6 +144,26 @@ execução de `sync` (uma por campeonato), 4 por dia.
 A janela vai de 7 dias atrás a 400 dias à frente, para pegar a temporada seguinte assim que a CBF
 publicar o calendário.
 
+### Sul-Americana: o site da CONMEBOL
+
+A Sul-Americana não está na CBF. Vem da página oficial do torneio
+([gol.conmebol.com](https://gol.conmebol.com/sudamericana/pt-br/tournament/104)), que também
+monta a lista no navegador a partir de um JSON do próprio site, sem autenticação:
+
+```
+GET https://gol.conmebol.com/sudamericana/pt-br/api/v2/tournament-fixtures/104
+```
+
+Uma requisição traz a temporada inteira (~160 jogos, ~2 MB); o bot fica só com os do Vasco
+(`id=97` lá, traduzido para o ID da CBF para o resto do código tratar igual). O `104` é a edição
+de 2026 e **muda todo ano**: é o número no fim da URL da página de jogos, e fica em
+`CONMEBOL_TORNEIOS` no [`config.py`](src/vascotv/config.py).
+
+As emissoras **dependem do país de quem acessa** (a resposta varia pelo header
+`CloudFront-Viewer-Country`) e vêm com o país no nome, como `Sudamericana_Paramount_Brazil`. O
+bot só aceita as que terminam em `_Brazil`; se não houver nenhuma, o jogo aparece como "Não
+informado" em vez de com o canal de outro país.
+
 ### Profissional vs. base: a regra que parece simples e não é
 
 Filtrar pelo time **não** separa o profissional das categorias de base. Série A, Sub-20, SUB17 e
@@ -193,7 +214,8 @@ nada:
 - **O token nunca vai para o log.** Ele faz parte da URL da API do Telegram, então em caso de
   erro o bot registra só o código HTTP e a descrição devolvida, nunca a URL
   ([`telegram.py`](src/vascotv/telegram.py)).
-- **`data/` contém só dados públicos da CBF** (jogos, estádios, transmissões) e IDs de jogo.
+- **`data/` contém só dados públicos da CBF e da CONMEBOL** (jogos, estádios, transmissões) e
+  IDs de jogo.
 - **O `.pem` em `certs/` é um certificado público de CA**, não uma chave privada.
 - `.env` está no `.gitignore`, caso você guarde as variáveis num arquivo para rodar localmente.
 
@@ -204,7 +226,8 @@ Quem fizer fork recebe o código, mas não os secrets: precisa criar o próprio 
 ```
 src/vascotv/
   config.py    IDs, categorias, janela, fuso — tudo que muda de temporada
-  cbf.py       cliente da API (retry, paginação)
+  cbf.py       cliente da API da CBF (retry, paginação)
+  conmebol.py  cliente do site da CONMEBOL (Sul-Americana)
   tls.py       o bundle de certificados que contorna a cadeia da CBF
   models.py    o jogo normalizado
   filtros.py   Vasco? profissional?
@@ -213,7 +236,7 @@ src/vascotv/
   telegram.py  envio
   storage.py   leitura e escrita de data/
   cli.py       `sync`, `lembrete` e `testar`
-tests/         60 testes com respostas reais da API gravadas em fixtures/
+tests/         71 testes com respostas reais das APIs gravadas em fixtures/
 ```
 
 ## Custo, e por que GitHub Actions
@@ -229,3 +252,9 @@ e Val Town ou Deno Deploy Cron precisariam de armazenamento externo.
 `1026` Supercopa do Brasil, `1016` Brasileiro Feminino, `1001` Copa do Nordeste, `1008` Copa
 Verde, `1032` Liga de Desenvolvimento, `1067` Copa Sul-Sudeste. Estaduais não entram — a CBF não
 os publica nesse endpoint.
+
+A Libertadores está na mesma plataforma da CONMEBOL: basta uma entrada em `CONMEBOL_TORNEIOS` com
+`"caminho": "libertadores"`, o ID da edição (o número no fim de
+`gol.conmebol.com/libertadores/pt-br/tournament/<ID>`) e o `prefixo_emissora` que aparecer nos
+nomes das emissoras da resposta (não verificado ainda; na Sul-Americana é `Sudamericana`), além de
+mapear esses nomes em `CONMEBOL_EMISSORAS`.

@@ -156,6 +156,13 @@ class Jogo:
         return campeonato
 
     @property
+    def etapa(self) -> str:
+        """'rodada 29' na CBF; na CONMEBOL a fase já vem por extenso ('Semifinal')."""
+        if self.rodada.isdigit():
+            return f"rodada {self.rodada}"
+        return self.rodada
+
+    @property
     def data_hora_curta(self) -> str:
         """Ex.: '07/10 (qua) 20:30'."""
         inicio = self.inicio

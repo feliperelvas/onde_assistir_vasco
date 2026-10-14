@@ -1,0 +1,208 @@
+{
+  "anchor_fixture": 1722,
+  "match": [
+    {
+      "matchInfo": {
+        "id": 1712,
+        "date": 1789509600,
+        "tbc": false,
+        "description": "Vasco da Gama vs Independiente Santa Fe",
+        "contestant": [
+          {
+            "id": 97,
+            "name": "Vasco da Gama",
+            "shortName": "Vasco",
+            "position": "home"
+          },
+          {
+            "id": 54,
+            "name": "Independiente Santa Fe",
+            "shortName": "Santa Fe",
+            "position": "away"
+          }
+        ],
+        "venue": {
+          "id": 121,
+          "longName": "Estádio São Januário",
+          "shortName": "Estádio São Januário"
+        },
+        "stage": {
+          "tid": 169,
+          "name": "Quarter-finals"
+        },
+        "broadcasts": [
+          {
+            "id": 29,
+            "name": "Sudamericana_Paramount_Brazil",
+            "link": "https://www.paramountplus.com/shows/conmebol-sul-americana/"
+          }
+        ]
+      },
+      "liveData": {
+        "matchStatus": "Played"
+      }
+    },
+    {
+      "matchInfo": {
+        "id": 1725,
+        "date": 1791937800,
+        "tbc": false,
+        "description": "Boca Juniors vs Vasco da Gama",
+        "contestant": [
+          {
+            "id": 53,
+            "name": "Boca Juniors",
+            "shortName": "Boca",
+            "position": "home"
+          },
+          {
+            "id": 97,
+            "name": "Vasco da Gama",
+            "shortName": "Vasco",
+            "position": "away"
+          }
+        ],
+        "venue": {
+          "id": 71,
+          "longName": "Estadio Alberto José Armando",
+          "shortName": "Estadio Alberto José Armando"
+        },
+        "stage": {
+          "tid": 170,
+          "name": "Semi-finals"
+        },
+        "broadcasts": [
+          {
+            "id": 29,
+            "name": "Sudamericana_Paramount_Brazil",
+            "link": "https://www.paramountplus.com/shows/conmebol-sul-americana/"
+          },
+          {
+            "id": 32,
+            "name": "Sudamericana_SBT_Brazil",
+            "link": "https://www.youtube.com/c/SBTSports"
+          }
+        ]
+      },
+      "liveData": {
+        "matchStatus": "Played"
+      }
+    },
+    {
+      "matchInfo": {
+        "id": 1719,
+        "date": 1792542600,
+        "tbc": false,
+        "description": "Vasco da Gama vs Boca Juniors",
+        "contestant": [
+          {
+            "id": 97,
+            "name": "Vasco da Gama",
+            "shortName": "Vasco",
+            "position": "home"
+          },
+          {
+            "id": 53,
+            "name": "Boca Juniors",
+            "shortName": "Boca",
+            "position": "away"
+          }
+        ],
+        "venue": {
+          "id": 41,
+          "longName": "Estadio Jornalista Mário Filho (Maracanã)",
+          "shortName": "Estadio Jornalista Mário Filho (Maracanã)"
+        },
+        "stage": {
+          "tid": 170,
+          "name": "Semi-finals"
+        },
+        "broadcasts": [
+          {
+            "id": 29,
+            "name": "Sudamericana_Paramount_Brazil",
+            "link": "https://www.paramountplus.com/shows/conmebol-sul-americana/"
+          },
+          {
+            "id": 32,
+            "name": "Sudamericana_SBT_Brazil",
+            "link": "https://www.youtube.com/c/SBTSports"
+          }
+        ]
+      },
+      "liveData": {
+        "matchStatus": "Fixture"
+      }
+    },
+    {
+      "matchInfo": {
+        "id": 1722,
+        "date": 1792015200,
+        "tbc": false,
+        "description": "Atlético Mineiro vs City Torque",
+        "contestant": [
+          {
+            "id": 58,
+            "name": "Atlético Mineiro",
+            "shortName": "Atlético MG",
+            "position": "home"
+          },
+          {
+            "id": 91,
+            "name": "City Torque",
+            "shortName": "City Torque",
+            "position": "away"
+          }
+        ],
+        "venue": {
+          "id": 82,
+          "longName": "Arena MRV",
+          "shortName": "Arena MRV"
+        },
+        "stage": {
+          "tid": 170,
+          "name": "Semi-finals"
+        },
+        "broadcasts": []
+      },
+      "liveData": {
+        "matchStatus": "Fixture"
+      }
+    },
+    {
+      "matchInfo": {
+        "id": 1727,
+        "date": 1795262400,
+        "tbc": true,
+        "description": "2026-11-21Z ",
+        "contestant": [
+          {
+            "id": 191,
+            "name": "TBD",
+            "shortName": "TBD",
+            "position": "home"
+          },
+          {
+            "id": 191,
+            "name": "TBD",
+            "shortName": "TBD",
+            "position": "away"
+          }
+        ],
+        "venue": {
+          "id": 85,
+          "longName": "Estadio Metropolitano Roberto Meléndez",
+          "shortName": "Estadio Metropolitano Roberto Meléndez"
+        },
+        "stage": {
+          "tid": 166,
+          "name": "Final"
+        },
+        "broadcasts": []
+      },
+      "liveData": {
+        "matchStatus": "Fixture"
+      }
+    }
+  ]
+}

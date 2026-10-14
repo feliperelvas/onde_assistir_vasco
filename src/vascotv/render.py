@@ -19,7 +19,7 @@ AVISO_CATEGORIA = (
 def _ficha(jogo: Jogo, com_data: bool = True) -> list[str]:
     linhas = [
         f"⚽ <b>{escape(jogo.confronto)}</b>",
-        f"🏆 {escape(jogo.competicao)} — rodada {escape(jogo.rodada)}",
+        f"🏆 {escape(jogo.competicao)} — {escape(jogo.etapa)}",
     ]
     if com_data:
         linhas.append(f"🕐 {escape(jogo.data_hora_curta)}")
@@ -40,7 +40,7 @@ def bloco_evento(evento: Evento) -> str:
             [
                 "❌ <b>Jogo saiu do calendário</b>",
                 f"⚽ <b>{escape(jogo.confronto)}</b>",
-                f"🏆 {escape(jogo.competicao)} — rodada {escape(jogo.rodada)}",
+                f"🏆 {escape(jogo.competicao)} — {escape(jogo.etapa)}",
                 f"🕐 estava marcado para {escape(jogo.data_hora_curta)}",
             ]
         )
@@ -49,7 +49,7 @@ def bloco_evento(evento: Evento) -> str:
         jogo = evento.depois
         linhas = [
             f"🔔 <b>{escape(jogo.confronto)}</b>",
-            f"🏆 {escape(jogo.competicao)} — rodada {escape(jogo.rodada)}",
+            f"🏆 {escape(jogo.competicao)} — {escape(jogo.etapa)}",
         ]
         for mudanca in evento.mudancas:
             de = escape(mudanca.de) or "—"
@@ -101,8 +101,8 @@ def mensagem_lembrete(jogos: list[Jogo]) -> str:
     for jogo in jogos:
         linhas = [
             f"⚽ <b>{escape(jogo.confronto)}</b>",
-            f"🏆 {escape(jogo.competicao)} — rodada {escape(jogo.rodada)}",
-            f"🕐 {escape(jogo.hora)} (horário de Brasília)",
+            f"🏆 {escape(jogo.competicao)} — {escape(jogo.etapa)}",
+            f"🕐 {escape(jogo.hora)} (horário de Brasília)" if jogo.hora else "🕐 horário a definir",
             f"🏟 {escape(jogo.local_formatado)}",
             f"📺 {escape(jogo.onde_assistir)}",
         ]
