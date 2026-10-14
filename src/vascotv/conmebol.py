@@ -47,7 +47,9 @@ def _get(sessao: requests.Session, url: str) -> dict:
                 inicio = " ".join(resposta.text[:200].split())
                 raise ValueError(
                     f"resposta não é JSON (HTTP {resposta.status_code}, "
-                    f"{resposta.headers.get('Content-Type')}, url final {resposta.url}): {inicio!r}"
+                    f"{resposta.headers.get('Content-Type')}, url final {resposta.url}, "
+                    f"waf={resposta.headers.get('x-amzn-waf-action')}, "
+                    f"cache={resposta.headers.get('X-Cache')}): {inicio!r}"
                 ) from erro
         except ErroCONMEBOL:
             raise
