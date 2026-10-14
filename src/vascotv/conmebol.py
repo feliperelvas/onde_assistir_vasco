@@ -40,7 +40,15 @@ def _get(sessao: requests.Session, url: str) -> dict:
             if 400 <= resposta.status_code < 500:
                 raise ErroCONMEBOL(f"HTTP {resposta.status_code} em {resposta.url}")
             resposta.raise_for_status()
-            return resposta.json()
+            try:
+                return resposta.json()
+            except ValueError as erro:
+                # Sem isto, uma página de bloqueio vira só "Expecting value" no log.
+                inicio = " ".join(resposta.text[:200].split())
+                raise ValueError(
+                    f"resposta não é JSON (HTTP {resposta.status_code}, "
+                    f"{resposta.headers.get('Content-Type')}, url final {resposta.url}): {inicio!r}"
+                ) from erro
         except ErroCONMEBOL:
             raise
         except (requests.RequestException, ValueError) as erro:

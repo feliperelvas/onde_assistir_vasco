@@ -17,6 +17,8 @@ class RespostaFalsa:
         self._corpo = corpo
         self.status_code = status
         self.url = "https://exemplo/api"
+        self.headers = {}
+        self.text = ""
 
     def raise_for_status(self):
         pass
