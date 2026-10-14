@@ -95,15 +95,13 @@ def jogo_from_api(bruto: dict, torneio_id: str, torneio_nome: str) -> Jogo | Non
         # `tbc` = horário a confirmar; a data vem com uma hora qualquer.
         hora = "" if info.get("tbc") else f"{inicio:%H:%M}"
 
+    nomes = [(b.get("name") or "").strip() for b in (info.get("broadcasts") or [])]
     transmissoes = tuple(
-        sorted(
-            {
-                nome_emissora(b["name"])
-                for b in (info.get("broadcasts") or [])
-                if (b.get("name") or "").endswith(SUFIXO_BRASIL)
-            }
-        )
+        sorted({nome_emissora(n) for n in nomes if n.endswith(SUFIXO_BRASIL)})
     )
+    descartadas = [n for n in nomes if n and not n.endswith(SUFIXO_BRASIL)]
+    if descartadas:
+        log.info("%s: emissoras de outro país ignoradas: %s", info.get("description"), descartadas)
 
     return Jogo(
         id_jogo=f"conmebol-{info['id']}",
