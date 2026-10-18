@@ -1,34 +1,6 @@
 {
   "jogos": [
     {
-      "campeonato_id": "42",
-      "campeonato_nome": "Campeonato Brasileiro",
-      "categoria_id": "1",
-      "categoria_nome": "Série A",
-      "data": "10/10/2026",
-      "grupo": "GRUPO ÚNICO",
-      "hora": "18:00",
-      "id_jogo": "832182",
-      "local": "São Januário - Rio de Janeiro - RJ",
-      "mandante": {
-        "id": "60646",
-        "nome": "Vasco da Gama Saf",
-        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
-      },
-      "num_jogo": "292",
-      "rodada": "30",
-      "transmissoes": [
-        "Premiere",
-        "Record",
-        "YouTube / Cazé TV"
-      ],
-      "visitante": {
-        "id": "20022",
-        "nome": "Remo",
-        "url_escudo": "https://conteudo.cbf.com.br/clubes/20022/escudo.jpg"
-      }
-    },
-    {
       "campeonato_id": "fotmob-299",
       "campeonato_nome": "Copa Sul-Americana",
       "categoria_id": "fotmob",
