@@ -153,6 +153,22 @@ def test_respostas_quebradas_viram_erro_fotmob(gravado, troca, trecho):
         _buscar(_sessao(gravado, **troca))
 
 
+def test_429_e_retentado(gravado, monkeypatch):
+    monkeypatch.setattr(fotmob.time, "sleep", lambda s: None)
+    sessao = _sessao(gravado)
+    original = sessao.get
+    respostas = [RespostaFalsa({}, status=429)]
+
+    def get(url, params=None, timeout=None):
+        if respostas and url.endswith("/api/data/teams"):
+            sessao.chamadas.append(("/api/data/teams", params))
+            return respostas.pop()
+        return original(url, params=params, timeout=timeout)
+
+    sessao.get = get
+    assert _buscar(sessao)
+
+
 def test_pagina_de_bloqueio_e_retentada_e_vira_erro(gravado, monkeypatch):
     monkeypatch.setattr(fotmob.time, "sleep", lambda s: None)
     bloqueio = RespostaFalsa(ValueError("Expecting value"), status=202)

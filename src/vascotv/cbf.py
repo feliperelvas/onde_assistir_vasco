@@ -14,6 +14,7 @@ from datetime import date, timedelta
 import requests
 
 from . import config
+from .espera import espera as calcular_espera
 from .models import Jogo
 from .tls import ca_bundle
 
@@ -30,11 +31,13 @@ def janela_padrao(hoje: date | None = None) -> tuple[date, date]:
 
 
 def _get(sessao: requests.Session, params: dict) -> dict:
-    """GET com retry e backoff exponencial. Erro 4xx não é retentado."""
+    """GET com retry e backoff exponencial. Erro 4xx não é retentado, salvo o 429."""
     ultimo: Exception | None = None
     for tentativa in range(config.TENTATIVAS):
         try:
             resposta = sessao.get(config.API_URL, params=params, timeout=config.TIMEOUT)
+            if resposta.status_code == 429:
+                raise requests.HTTPError(f"HTTP 429 em {resposta.url}", response=resposta)
             if 400 <= resposta.status_code < 500:
                 raise ErroCBF(f"HTTP {resposta.status_code} em {resposta.url}")
             resposta.raise_for_status()
@@ -44,7 +47,7 @@ def _get(sessao: requests.Session, params: dict) -> dict:
         except (requests.RequestException, ValueError) as erro:
             ultimo = erro
             if tentativa < config.TENTATIVAS - 1:
-                espera = 2**tentativa
+                espera = calcular_espera(erro, tentativa)
                 log.warning("Falha na API da CBF (%s); nova tentativa em %ss", erro, espera)
                 time.sleep(espera)
     raise ErroCBF(f"API da CBF falhou após {config.TENTATIVAS} tentativas: {ultimo}")

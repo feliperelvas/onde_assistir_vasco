@@ -82,6 +82,9 @@ USER_AGENT = "onde-assistir-vasco/1.0 (monitor pessoal de transmissoes)"
 PAGE_SIZE = 2000
 TIMEOUT = 30
 TENTATIVAS = 3
+# HTTP 429 (limite de requisições) é retentado com espera maior; ver vascotv.espera.
+ESPERA_429 = 10
+ESPERA_MAXIMA = 60
 
 # --- Janela de consulta -----------------------------------------------------
 # O passado curto mantém no snapshot o jogo que acabou de acontecer; os 400 dias

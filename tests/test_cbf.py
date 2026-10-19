@@ -9,10 +9,11 @@ from vascotv import cbf, config
 
 
 class RespostaFalsa:
-    def __init__(self, corpo, status=200):
+    def __init__(self, corpo, status=200, headers=None):
         self._corpo = corpo
         self.status_code = status
         self.url = "https://exemplo/api"
+        self.headers = headers or {}
 
     def raise_for_status(self):
         if self.status_code >= 500:
@@ -124,6 +125,45 @@ def test_desiste_depois_do_limite_de_tentativas(monkeypatch):
         cbf.buscar_jogos("42", date(2026, 1, 1), date(2026, 12, 31), sessao=sessao)
 
     assert len(sessao.chamadas) == config.TENTATIVAS
+
+
+def test_429_e_retentado_respeitando_retry_after(monkeypatch):
+    esperas = []
+    monkeypatch.setattr(cbf.time, "sleep", esperas.append)
+    sessao = SessaoFalsa(
+        RespostaFalsa({}, status=429, headers={"Retry-After": "7"}),
+        RespostaFalsa({"jogos": [_jogo("1")], "meta": {"last_page": 1}}),
+    )
+
+    jogos = cbf.buscar_jogos("42", date(2026, 1, 1), date(2026, 12, 31), sessao=sessao)
+
+    assert len(jogos) == 1
+    assert esperas == [7]
+
+
+def test_429_insistente_vira_erro_cbf(monkeypatch):
+    esperas = []
+    monkeypatch.setattr(cbf.time, "sleep", esperas.append)
+    sessao = SessaoFalsa(*[RespostaFalsa({}, status=429)] * config.TENTATIVAS)
+
+    with pytest.raises(cbf.ErroCBF, match="429"):
+        cbf.buscar_jogos("42", date(2026, 1, 1), date(2026, 12, 31), sessao=sessao)
+
+    assert len(sessao.chamadas) == config.TENTATIVAS
+    assert esperas == [config.ESPERA_429, config.ESPERA_429 * 2]
+
+
+def test_retry_after_exagerado_e_limitado(monkeypatch):
+    esperas = []
+    monkeypatch.setattr(cbf.time, "sleep", esperas.append)
+    sessao = SessaoFalsa(
+        RespostaFalsa({}, status=429, headers={"Retry-After": "3600"}),
+        RespostaFalsa({"jogos": [], "meta": {"last_page": 1}}),
+    )
+
+    cbf.buscar_jogos("42", date(2026, 1, 1), date(2026, 12, 31), sessao=sessao)
+
+    assert esperas == [config.ESPERA_MAXIMA]
 
 
 def test_janela_padrao_cobre_passado_curto_e_temporada_seguinte():
