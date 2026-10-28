@@ -1,34 +1,6 @@
 {
   "jogos": [
     {
-      "campeonato_id": "fotmob-299",
-      "campeonato_nome": "Copa Sul-Americana",
-      "categoria_id": "fotmob",
-      "categoria_nome": "",
-      "data": "20/10/2026",
-      "grupo": "",
-      "hora": "21:30",
-      "id_jogo": "fotmob-1000021776",
-      "local": "Estadio Jornalista Mário Filho (Maracanã) - Rio de Janeiro",
-      "mandante": {
-        "id": "60646",
-        "nome": "Vasco da Gama",
-        "url_escudo": ""
-      },
-      "num_jogo": "",
-      "rodada": "Semifinal · volta",
-      "transmissoes": [
-        "Paramount+",
-        "SBT",
-        "SBT Sports YouTube"
-      ],
-      "visitante": {
-        "id": "fotmob:10077",
-        "nome": "Boca Juniors",
-        "url_escudo": ""
-      }
-    },
-    {
       "campeonato_id": "42",
       "campeonato_nome": "Campeonato Brasileiro",
       "categoria_id": "1",
