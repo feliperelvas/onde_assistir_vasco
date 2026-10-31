@@ -141,6 +141,60 @@
         "nome": "Palmeiras",
         "url_escudo": "https://conteudo.cbf.com.br/clubes/20002/escudo.jpg"
       }
+    },
+    {
+      "campeonato_id": "42",
+      "campeonato_nome": "Campeonato Brasileiro",
+      "categoria_id": "1",
+      "categoria_nome": "Série A",
+      "data": "19/11/2026",
+      "grupo": "GRUPO ÚNICO",
+      "hora": "19:30",
+      "id_jogo": "832232",
+      "local": "São Januário - Rio de Janeiro - RJ",
+      "mandante": {
+        "id": "60646",
+        "nome": "Vasco da Gama Saf",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
+      },
+      "num_jogo": "342",
+      "rodada": "35",
+      "transmissoes": [
+        "Premiere",
+        "Sportv"
+      ],
+      "visitante": {
+        "id": "20011",
+        "nome": "Internacional",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20011/escudo.jpg"
+      }
+    },
+    {
+      "campeonato_id": "42",
+      "campeonato_nome": "Campeonato Brasileiro",
+      "categoria_id": "1",
+      "categoria_nome": "Série A",
+      "data": "22/11/2026",
+      "grupo": "GRUPO ÚNICO",
+      "hora": "19:30",
+      "id_jogo": "832245",
+      "local": "Cícero de Souza Marques - Braganca Paulista - SP",
+      "mandante": {
+        "id": "20007",
+        "nome": "Red Bull Bragantino",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/20007/escudo.jpg"
+      },
+      "num_jogo": "355",
+      "rodada": "36",
+      "transmissoes": [
+        "Premiere",
+        "Sportv"
+      ],
+      "visitante": {
+        "id": "60646",
+        "nome": "Vasco da Gama Saf",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
+      }
     }
   ]
 }
