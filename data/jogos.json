@@ -5,34 +5,6 @@
       "campeonato_nome": "Campeonato Brasileiro",
       "categoria_id": "1",
       "categoria_nome": "Série A",
-      "data": "24/10/2026",
-      "grupo": "GRUPO ÚNICO",
-      "hora": "18:30",
-      "id_jogo": "832202",
-      "local": "São Januário - Rio de Janeiro - RJ",
-      "mandante": {
-        "id": "60646",
-        "nome": "Vasco da Gama Saf",
-        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
-      },
-      "num_jogo": "312",
-      "rodada": "32",
-      "transmissoes": [
-        "Premiere",
-        "Record",
-        "YouTube / Cazé TV"
-      ],
-      "visitante": {
-        "id": "20001",
-        "nome": "Corinthians",
-        "url_escudo": "https://conteudo.cbf.com.br/clubes/20001/escudo.jpg"
-      }
-    },
-    {
-      "campeonato_id": "42",
-      "campeonato_nome": "Campeonato Brasileiro",
-      "categoria_id": "1",
-      "categoria_nome": "Série A",
       "data": "29/10/2026",
       "grupo": "GRUPO ÚNICO",
       "hora": "20:00",
