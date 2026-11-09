@@ -111,6 +111,33 @@
         "nome": "Vasco da Gama Saf",
         "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
       }
+    },
+    {
+      "campeonato_id": "42",
+      "campeonato_nome": "Campeonato Brasileiro",
+      "categoria_id": "1",
+      "categoria_nome": "Série A",
+      "data": "29/11/2026",
+      "grupo": "GRUPO ÚNICO",
+      "hora": "19:30",
+      "id_jogo": "832256",
+      "local": "ARENA MRV - Belo Horizonte - MG",
+      "mandante": {
+        "id": "62194",
+        "nome": "Atlético Mineiro",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/62194/escudo.jpg"
+      },
+      "num_jogo": "366",
+      "rodada": "37",
+      "transmissoes": [
+        "Premiere",
+        "Sportv"
+      ],
+      "visitante": {
+        "id": "60646",
+        "nome": "Vasco da Gama Saf",
+        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
+      }
     }
   ]
 }
