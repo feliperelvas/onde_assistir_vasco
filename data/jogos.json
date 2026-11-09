@@ -1,36 +1,6 @@
 {
   "jogos": [
     {
-      "campeonato_id": "24",
-      "campeonato_nome": "Copa do Brasil",
-      "categoria_id": "4",
-      "categoria_nome": "Profissional",
-      "data": "01/11/2026",
-      "grupo": "GRUPO 124",
-      "hora": "16:00",
-      "id_jogo": "835309",
-      "local": "Nubank Parque  - Sao Paulo - SP",
-      "mandante": {
-        "id": "20002",
-        "nome": "Palmeiras",
-        "url_escudo": "https://conteudo.cbf.com.br/clubes/20002/escudo.jpg"
-      },
-      "num_jogo": "152",
-      "rodada": "1",
-      "transmissoes": [
-        "Amazon Prime",
-        "GE TV",
-        "Globo",
-        "Premiere",
-        "Sportv"
-      ],
-      "visitante": {
-        "id": "60646",
-        "nome": "Vasco da Gama Saf",
-        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
-      }
-    },
-    {
       "campeonato_id": "42",
       "campeonato_nome": "Campeonato Brasileiro",
       "categoria_id": "1",
