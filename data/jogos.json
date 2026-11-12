@@ -1,34 +1,6 @@
 {
   "jogos": [
     {
-      "campeonato_id": "42",
-      "campeonato_nome": "Campeonato Brasileiro",
-      "categoria_id": "1",
-      "categoria_nome": "Série A",
-      "data": "04/11/2026",
-      "grupo": "GRUPO ÚNICO",
-      "hora": "19:30",
-      "id_jogo": "832228",
-      "local": "Arena da Baixada - Curitiba - PR",
-      "mandante": {
-        "id": "20052",
-        "nome": "Athletico Paranaense",
-        "url_escudo": "https://conteudo.cbf.com.br/clubes/20052/escudo.jpg"
-      },
-      "num_jogo": "338",
-      "rodada": "34",
-      "transmissoes": [
-        "Premiere",
-        "Record",
-        "YouTube / Cazé TV"
-      ],
-      "visitante": {
-        "id": "60646",
-        "nome": "Vasco da Gama Saf",
-        "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg"
-      }
-    },
-    {
       "campeonato_id": "24",
       "campeonato_nome": "Copa do Brasil",
       "categoria_id": "4",
