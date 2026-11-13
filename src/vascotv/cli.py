@@ -62,7 +62,9 @@ def _manter_transmissoes(novos: list[Jogo], anteriores: list[Jogo]) -> list[Jogo
     ]
 
 
-def _buscar_fotmob(inicio, fim, anterior: list[Jogo]) -> tuple[list[Jogo], str | None]:
+def _buscar_fotmob(
+    inicio, fim, anterior: list[Jogo], da_cbf: list[Jogo]
+) -> tuple[list[Jogo], str | None]:
     """Jogos do FotMob e o erro, se houve.
 
     Diferente da CBF, falha aqui não aborta o run: o FotMob não é oficial e pode
@@ -71,10 +73,72 @@ def _buscar_fotmob(inicio, fim, anterior: list[Jogo]) -> tuple[list[Jogo], str |
     anunciados como "saiu do calendário".
     """
     try:
-        return _manter_transmissoes(fotmob.buscar_todos(inicio, fim), anterior), None
+        do_fotmob = fotmob.buscar_todos(inicio, fim, da_cbf=da_cbf)
+        return _manter_transmissoes(do_fotmob, anterior), None
     except fotmob.ErroFotMob as erro:
         log.error("FotMob: %s", erro)
         return [jogo for jogo in anterior if _do_fotmob(jogo)], str(erro)
+
+
+def _rodada_cbf(jogo: Jogo) -> tuple[str, int, str] | None:
+    """Identifica o jogo de liga por rodada, para casar CBF e FotMob.
+
+    O ano separa temporadas: a janela de 400 dias pega a tabela do ano seguinte
+    assim que a CBF publica, e a rodada 21 de lá não é a de agora.
+    """
+    complementares = {c[0]: c[2] for c in config.FOTMOB_COMPLEMENTO.values()}
+    if (
+        complementares.get(jogo.campeonato_id) != jogo.categoria_id
+        or not jogo.rodada.isdigit()
+        or jogo.inicio is None
+        or config.VASCO_ID not in (jogo.mandante.id, jogo.visitante.id)
+    ):
+        return None
+    return (jogo.campeonato_id, jogo.inicio.year, jogo.rodada)
+
+
+def _unir_fontes(
+    da_cbf: list[Jogo], do_fotmob: list[Jogo], anterior: list[Jogo]
+) -> tuple[list[Jogo], dict[str, Jogo]]:
+    """Junta as fontes; a CBF manda quando as duas têm a mesma rodada.
+
+    Devolve também {id do FotMob -> jogo da CBF} para o jogo que já estava no
+    snapshot pelo FotMob e agora a CBF publicou: é o mesmo jogo trocando de
+    fonte, não um que saiu e outro que entrou.
+    """
+    da_cbf_por_rodada = {}
+    for jogo in da_cbf:
+        chave = _rodada_cbf(jogo)
+        if chave:
+            da_cbf_por_rodada[chave] = jogo
+    completos = [
+        jogo for jogo in do_fotmob if _rodada_cbf(jogo) not in da_cbf_por_rodada
+    ]
+    trocas = {
+        jogo.id_jogo: da_cbf_por_rodada[chave]
+        for jogo in anterior
+        if _do_fotmob(jogo) and (chave := _rodada_cbf(jogo)) in da_cbf_por_rodada
+    }
+    return da_cbf + completos, trocas
+
+
+def _como_na_cbf(antigo: Jogo, da_cbf: Jogo) -> Jogo:
+    """A versão do FotMob no snapshot, reescrita com a grafia da CBF.
+
+    Nome de time, estádio e caixa dos canais variam entre as fontes ("RB
+    Bragantino", "SporTV"); sem isto a troca de fonte viraria aviso de mudança.
+    Data, hora e canais diferentes de verdade continuam sendo avisados.
+    """
+    def canais(jogo: Jogo) -> set[str]:
+        return {canal.casefold() for canal in jogo.transmissoes}
+
+    mesmos_canais = canais(antigo) == canais(da_cbf)
+    return replace(
+        da_cbf,
+        data=antigo.data,
+        hora=antigo.hora,
+        transmissoes=da_cbf.transmissoes if mesmos_canais else antigo.transmissoes,
+    )
 
 
 def _avisar_fonte(fonte: str, erro: str | None, dry_run: bool) -> None:
@@ -98,9 +162,24 @@ def comando_sync(args: argparse.Namespace) -> int:
     # Falha da CBF aborta o run (ErroCBF sobe até main); a do FotMob, não.
     da_cbf = cbf.buscar_todos(inicio, fim)
     anterior = storage.carregar_snapshot()
-    do_fotmob, erro_fotmob = _buscar_fotmob(inicio, fim, anterior or [])
-    jogos = jogos_do_vasco(da_cbf + do_fotmob)
+    do_fotmob, erro_fotmob = _buscar_fotmob(inicio, fim, anterior or [], da_cbf)
+    unidos, trocas = _unir_fontes(da_cbf, do_fotmob, anterior or [])
+    jogos = jogos_do_vasco(unidos)
     _avisar_fonte(FONTE_FOTMOB, erro_fotmob, args.dry_run)
+    if trocas:
+        log.info(
+            "Passaram do FotMob para a CBF: %s",
+            {antigo: novo.id_jogo for antigo, novo in trocas.items()},
+        )
+        anterior = [
+            _como_na_cbf(jogo, trocas[jogo.id_jogo]) if jogo.id_jogo in trocas else jogo
+            for jogo in anterior
+        ]
+        # O lembrete já enviado pelo id do FotMob vale para o id da CBF.
+        enviados = storage.carregar_lembretes()
+        herdados = {trocas[i].id_jogo for i in enviados & trocas.keys()}
+        if herdados and not args.dry_run:
+            storage.salvar_lembretes(enviados | herdados)
 
     if anterior is None:
         # Primeira execução: notificar tudo viraria um despejo do calendário

@@ -204,6 +204,124 @@ def test_falha_no_envio_preserva_o_snapshot_antigo(ambiente, monkeypatch, jogos,
     assert config.SNAPSHOT_PATH.read_text(encoding="utf-8") == antes
 
 
+# --- buracos do Brasileirão na CBF --------------------------------------------
+def _chape(fazer_jogo, **alteracoes):
+    """Como o FotMob entrega o jogo adiado que a CBF não publicou."""
+    base = dict(
+        id_jogo="fotmob-5103573",
+        data="14/11/2026",
+        hora="20:30",
+        rodada="21",
+        local="Arena Condá - Chapecó",
+        mandante={"id": "fotmob:197693", "nome": "Chapecoense"},
+        visitante={"id": config.VASCO_ID, "nome": "Vasco da Gama"},
+        transmissoes=[{"nome": "SporTV"}, {"nome": "Premiere"}],
+    )
+    base.update(alteracoes)
+    return fazer_jogo(**base)
+
+
+def _chape_na_cbf(fazer_jogo, **alteracoes):
+    base = dict(
+        id_jogo="831999",
+        data="14/11/2026",
+        hora="20:30",
+        rodada="21",
+        local="Arena Condá - Chapeco - SC",
+        mandante={"id": "20010", "nome": "Chapecoense Saf"},
+        transmissoes=[{"nome": "Sportv"}, {"nome": "Premiere"}],
+    )
+    base.update(alteracoes)
+    return fazer_jogo(**base)
+
+
+def test_rodada_que_falta_na_cbf_vem_do_fotmob(ambiente, monkeypatch, jogos, fazer_jogo):
+    _com_api(monkeypatch, jogos)
+    cli.main(["sync"])
+
+    monkeypatch.setattr(fotmob, "buscar_todos", lambda *a, **kw: [_chape(fazer_jogo)])
+    assert cli.main(["sync"]) == 0
+
+    (mensagem,) = ambiente
+    assert "Jogo novo no calendário" in mensagem
+    assert "Chapecoense x Vasco" in mensagem
+    assert "Brasileirão · Série A — rodada 21" in mensagem
+
+
+def test_sync_passa_a_lista_da_cbf_ao_fotmob(ambiente, monkeypatch, jogos):
+    _com_api(monkeypatch, jogos)
+    recebido = {}
+    monkeypatch.setattr(
+        fotmob, "buscar_todos", lambda *a, **kw: recebido.update(kw) or []
+    )
+
+    cli.main(["sync"])
+
+    assert [j.id_jogo for j in recebido["da_cbf"]] == [j.id_jogo for j in jogos]
+
+
+def test_rodada_que_a_cbf_tem_ignora_o_fotmob(ambiente, monkeypatch, fazer_jogo):
+    """Remarcação que só o FotMob refletiu: a CBF manda, sem jogo duplicado."""
+    _com_api(monkeypatch, [_chape_na_cbf(fazer_jogo, data="12/11/2026")])
+    cli.main(["sync"])
+    monkeypatch.setattr(fotmob, "buscar_todos", lambda *a, **kw: [_chape(fazer_jogo)])
+
+    assert cli.main(["sync"]) == 0
+
+    assert ambiente == []
+    assert [j.id_jogo for j in storage.carregar_snapshot()] == ["831999"]
+
+
+def test_mesma_rodada_de_outro_ano_nao_conta(ambiente, monkeypatch, fazer_jogo):
+    """A janela de 400 dias pega a tabela do ano seguinte; a rodada 21 dela é outra."""
+    _com_api(monkeypatch, [_chape_na_cbf(fazer_jogo, data="14/07/2027")])
+    monkeypatch.setattr(fotmob, "buscar_todos", lambda *a, **kw: [_chape(fazer_jogo)])
+
+    cli.main(["sync"])
+
+    assert len(storage.carregar_snapshot()) == 2
+
+
+def test_cbf_publicar_o_jogo_troca_a_fonte_em_silencio(ambiente, monkeypatch, fazer_jogo):
+    _com_api(monkeypatch, [])
+    monkeypatch.setattr(fotmob, "buscar_todos", lambda *a, **kw: [_chape(fazer_jogo)])
+    cli.main(["sync"])
+    storage.salvar_lembretes({"fotmob-5103573"})
+
+    _com_api(monkeypatch, [_chape_na_cbf(fazer_jogo)])
+    assert cli.main(["sync"]) == 0
+
+    assert ambiente == []
+    assert [j.id_jogo for j in storage.carregar_snapshot()] == ["831999"]
+    assert "831999" in storage.carregar_lembretes()
+
+
+def test_troca_de_fonte_ainda_avisa_mudanca_real(ambiente, monkeypatch, fazer_jogo):
+    _com_api(monkeypatch, [])
+    monkeypatch.setattr(fotmob, "buscar_todos", lambda *a, **kw: [_chape(fazer_jogo)])
+    cli.main(["sync"])
+
+    _com_api(monkeypatch, [_chape_na_cbf(fazer_jogo, hora="21:00")])
+    assert cli.main(["sync"]) == 0
+
+    (mensagem,) = ambiente
+    assert "20:30</s> → <b>21:00" in mensagem
+    assert "saiu do calendário" not in mensagem
+    assert "Jogo novo" not in mensagem
+
+
+def test_falha_do_fotmob_nao_duplica_rodada_que_a_cbf_publicou(ambiente, monkeypatch, fazer_jogo):
+    _com_api(monkeypatch, [])
+    monkeypatch.setattr(fotmob, "buscar_todos", lambda *a, **kw: [_chape(fazer_jogo)])
+    cli.main(["sync"])
+
+    _fotmob_falha(monkeypatch)
+    _com_api(monkeypatch, [_chape_na_cbf(fazer_jogo)])
+    cli.main(["sync"])
+
+    assert [j.id_jogo for j in storage.carregar_snapshot()] == ["831999"]
+
+
 # --- lembrete ---------------------------------------------------------------
 @pytest.fixture
 def jogo_de_hoje(fazer_jogo):

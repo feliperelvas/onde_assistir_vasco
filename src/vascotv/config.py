@@ -55,6 +55,16 @@ FOTMOB_LIGAS = {
     "299": "Copa Sul-Americana",
 }
 
+# Ligas que a CBF já cobre, mas onde o FotMob preenche buracos. O endpoint
+# "onde assistir" da CBF some com jogo adiado até ele ganhar transmissão (em
+# 11/2026 faltavam Chapecoense x Vasco, remarcado da rodada 21, e a rodada 38).
+# Daqui só entra jogo de rodada que a CBF não tem; quando ela publicar, o dela
+# assume o lugar (ver cli._unir_fontes).
+#   leagueId do FotMob -> (campeonato_id, campeonato_nome, categoria_id, categoria_nome) da CBF
+FOTMOB_COMPLEMENTO = {
+    "268": ("42", "Campeonato Brasileiro", "1", "Série A"),
+}
+
 # Fases como vêm do FotMob -> como aparecem na mensagem.
 FOTMOB_FASES = {
     "Group Stage": "Fase de grupos",

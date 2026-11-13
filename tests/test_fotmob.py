@@ -178,3 +178,69 @@ def test_pagina_de_bloqueio_e_retentada_e_vira_erro(gravado, monkeypatch):
     with pytest.raises(fotmob.ErroFotMob, match=r"não é JSON \(HTTP 202, text/html\)"):
         _buscar(sessao)
     assert len(sessao.chamadas) == config.TENTATIVAS
+
+
+# --- complemento do Brasileirão ---------------------------------------------
+def _detalhes_serie_a(rodada="21"):
+    return {
+        "general": {"matchRound": rodada},
+        "content": {
+            "matchFacts": {
+                "infoBox": {"Stadium": {"name": "Arena Condá", "city": "Chapecó, Santa Catarina"}}
+            }
+        },
+    }
+
+
+def _sessao_serie_a(gravado, rodada="21"):
+    return _sessao(
+        gravado,
+        **{
+            "/api/data/matchDetails?5103666": RespostaFalsa(_detalhes_serie_a(rodada)),
+            "/api/data/matchDetails?5103735": RespostaFalsa(_detalhes_serie_a("38")),
+        },
+    )
+
+
+def test_serie_a_so_entra_quando_a_cbf_e_consultada(gravado):
+    """Sem a lista da CBF não há como saber o que falta; fica só a Sul-Americana."""
+    jogos = _buscar(_sessao_serie_a(gravado))
+
+    assert all(j.competicao == "Copa Sul-Americana" for j in jogos)
+
+
+def test_serie_a_ausente_na_cbf_vira_jogo_do_brasileirao(gravado):
+    sessao = _sessao_serie_a(gravado)
+    jogos = fotmob.buscar_todos(date(2026, 10, 1), date(2026, 12, 31), sessao=sessao, da_cbf=[])
+
+    serie_a = [j for j in jogos if j.campeonato_id == "42"]
+    assert [j.id_jogo for j in serie_a] == ["fotmob-5103666", "fotmob-5103735"]
+    jogo = serie_a[0]
+    assert jogo.competicao == "Brasileirão · Série A"
+    assert jogo.etapa == "rodada 21"
+    assert jogo.local_formatado == "Arena Condá — Chapecó"
+    assert jogo.onde_assistir == "Premiere, SporTV"
+    assert jogos_do_vasco(serie_a) == serie_a
+    assert "desconhecida" not in mensagem_lembrete([jogo])
+
+
+def test_dia_com_jogo_na_cbf_nem_busca_detalhes(gravado, fazer_jogo):
+    sessao = _sessao_serie_a(gravado)
+    na_cbf = fazer_jogo(data="17/10/2026", hora="21:00")  # 5103666 é 18/10 00:00 UTC
+
+    fotmob.buscar_todos(date(2026, 10, 1), date(2026, 12, 31), sessao=sessao, da_cbf=[na_cbf])
+
+    detalhes = [p["matchId"] for c, p in sessao.chamadas if c == "/api/data/matchDetails"]
+    assert 5103666 not in detalhes and 5103735 in detalhes
+
+
+def test_serie_a_sem_rodada_vira_erro_fotmob(gravado):
+    sessao = _sessao_serie_a(gravado, rodada="")
+    with pytest.raises(fotmob.ErroFotMob, match="5103666"):
+        fotmob.buscar_todos(date(2026, 10, 1), date(2026, 12, 31), sessao=sessao, da_cbf=[])
+
+
+def test_jogo_cancelado_e_ignorado(gravado):
+    gravado["teams"]["fixtures"]["allFixtures"]["fixtures"][2]["status"]["cancelled"] = True
+
+    assert [j.id_jogo for j in _buscar(_sessao(gravado))] == ["fotmob-1000021775"]

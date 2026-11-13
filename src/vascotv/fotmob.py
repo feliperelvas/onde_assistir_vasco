@@ -1,4 +1,4 @@
-"""Cliente do FotMob, usado para a Copa Sul-Americana.
+"""Cliente do FotMob: a Copa Sul-Americana e os buracos do Brasileirão na CBF.
 
 Três consultas, todas JSON e sem autenticação:
 
@@ -97,6 +97,10 @@ def canais_do_guia(guia: dict) -> dict[str, tuple[str, ...]]:
     return canais
 
 
+def _rodada(detalhes: dict) -> str:
+    return (detalhes.get("general") or {}).get("matchRound") or ""
+
+
 def _etapa(detalhes: dict) -> str:
     info = (detalhes.get("content") or {}).get("matchFacts", {}).get("infoBox") or {}
     rodada = (info.get("Tournament") or {}).get("round") or ""
@@ -121,28 +125,74 @@ def jogo_from_api(bruto: dict, detalhes: dict, canais: tuple[str, ...]) -> Jogo:
     liga = str(bruto["tournament"]["leagueId"])
     data = "" if status.get("matchDateTbd") else f"{inicio:%d/%m/%Y}"
     hora = "" if data == "" or status.get("matchTimeTbd") else f"{inicio:%H:%M}"
+    if liga in config.FOTMOB_COMPLEMENTO:
+        # Vestido de jogo da CBF, para render, filtros e troca de fonte não
+        # precisarem saber de onde ele veio.
+        campeonato_id, campeonato_nome, categoria_id, categoria_nome = config.FOTMOB_COMPLEMENTO[liga]
+        rodada = _rodada(detalhes)
+        if not rodada.isdigit():
+            raise ValueError(f"rodada ausente ({rodada!r})")
+    else:
+        campeonato_id, campeonato_nome = f"fotmob-{liga}", config.FOTMOB_LIGAS[liga]
+        categoria_id, categoria_nome = config.CATEGORIA_FOTMOB, ""
+        rodada = _etapa(detalhes)
     return Jogo(
         id_jogo=f"fotmob-{bruto['id']}",
         data=data,
         hora=hora,
         local=_local(detalhes),
-        rodada=_etapa(detalhes),
+        rodada=rodada,
         grupo="",
         num_jogo="",
         mandante=_time(bruto["home"]),
         visitante=_time(bruto["away"]),
         transmissoes=canais,
-        campeonato_id=f"fotmob-{liga}",
-        campeonato_nome=config.FOTMOB_LIGAS[liga],
-        categoria_id=config.CATEGORIA_FOTMOB,
-        categoria_nome="",
+        campeonato_id=campeonato_id,
+        campeonato_nome=campeonato_nome,
+        categoria_id=categoria_id,
+        categoria_nome=categoria_nome,
     )
 
 
+def _datas_cobertas(da_cbf: list[Jogo]) -> dict[str, set[date]]:
+    """campeonato_id -> dias em que a CBF já tem jogo do Vasco profissional."""
+    profissionais = {c[0]: c[2] for c in config.FOTMOB_COMPLEMENTO.values()}
+    datas: dict[str, set[date]] = {}
+    for jogo in da_cbf:
+        if (
+            profissionais.get(jogo.campeonato_id) == jogo.categoria_id
+            and config.VASCO_ID in (jogo.mandante.id, jogo.visitante.id)
+            and jogo.inicio
+        ):
+            datas.setdefault(jogo.campeonato_id, set()).add(jogo.inicio.date())
+    return datas
+
+
+def _interessa(bruto: dict, datas_cbf: dict[str, set[date]] | None) -> bool:
+    liga = str(bruto["tournament"]["leagueId"])
+    if liga in config.FOTMOB_LIGAS:
+        return True
+    if datas_cbf is None or liga not in config.FOTMOB_COMPLEMENTO:
+        return False
+    # Só busca os detalhes (e a rodada) do que a CBF não tem naquele dia: o
+    # Vasco não joga duas vezes no mesmo dia pela mesma competição.
+    campeonato = config.FOTMOB_COMPLEMENTO[liga][0]
+    return _inicio(bruto).date() not in datas_cbf.get(campeonato, set())
+
+
 def buscar_todos(
-    data_inicio: date, data_fim: date, sessao: requests.Session | None = None
+    data_inicio: date,
+    data_fim: date,
+    sessao: requests.Session | None = None,
+    da_cbf: list[Jogo] | None = None,
 ) -> list[Jogo]:
-    """Jogos do Vasco nas ligas de FOTMOB_LIGAS dentro da janela."""
+    """Jogos do Vasco nas ligas de FOTMOB_LIGAS dentro da janela.
+
+    Com `da_cbf`, também os de FOTMOB_COMPLEMENTO em dias sem jogo da CBF. Se
+    a rodada já existe na CBF (remarcação que ela ainda não refletiu), quem
+    descarta é cli._unir_fontes.
+    """
+    datas_cbf = None if da_cbf is None else _datas_cobertas(da_cbf)
     propria = sessao is None
     sessao = sessao or requests.Session()
     sessao.headers.update({"Accept": "application/json", "User-Agent": config.USER_AGENT})
@@ -152,7 +202,8 @@ def buscar_todos(
             selecionados = [
                 bruto
                 for bruto in time_["fixtures"]["allFixtures"]["fixtures"]
-                if str(bruto["tournament"]["leagueId"]) in config.FOTMOB_LIGAS
+                if not (bruto.get("status") or {}).get("cancelled")
+                and _interessa(bruto, datas_cbf)
                 and data_inicio <= _inicio(bruto).date() <= data_fim
             ]
         except (KeyError, TypeError, ValueError) as erro:
