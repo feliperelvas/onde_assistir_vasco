@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from html import escape
 
 from .diff import Evento, JogoAlterado, JogoNovo, JogoRemovido
@@ -110,6 +111,29 @@ def mensagem_lembrete(jogos: list[Jogo]) -> str:
             linhas.append(AVISO_CATEGORIA.format(escape(jogo.categoria_id)))
         blocos.append("\n".join(linhas))
     return "\n\n".join(blocos)
+
+
+def mensagens_resumo_semanal(jogos: list[Jogo], segunda: date, domingo: date) -> list[str]:
+    """Resumo de segunda-feira com os jogos de segunda a domingo."""
+    periodo = f"{segunda:%d/%m} a {domingo:%d/%m}"
+    if not jogos:
+        return [f"🗓 <b>Semana do Vasco ({periodo})</b>\nNenhum jogo do Vasco nesta semana."]
+
+    plural = "jogo" if len(jogos) == 1 else "jogos"
+    cabecalho = f"🗓 <b>Semana do Vasco ({periodo})</b> — {len(jogos)} {plural}"
+    mensagens: list[str] = []
+    atual = [cabecalho]
+    tamanho = len(cabecalho)
+    for jogo in jogos:
+        bloco = "\n".join(_ficha(jogo))
+        if len(atual) > 1 and tamanho + len(bloco) + 2 > LIMITE:
+            mensagens.append("\n\n".join(atual))
+            atual = [cabecalho]
+            tamanho = len(cabecalho)
+        atual.append(bloco)
+        tamanho += len(bloco) + 2
+    mensagens.append("\n\n".join(atual))
+    return mensagens
 
 
 def mensagem_fonte_com_problema(fonte: str, erro: str) -> str:

@@ -8,6 +8,7 @@ on:
     # O lembrete roda três vezes porque o GitHub chega a atrasar o cron em horas; o
     # primeiro que rodar envia e os outros veem data/lembretes.json e não repetem.
     # Minuto 17 para fugir do pico de disparos na hora cheia.
+    # Na segunda, o lembrete manda antes o resumo com os jogos da semana.
     - cron: "17 6 * * *"   # 03:17 BRT — lembrete do dia
     - cron: "17 9 * * *"   # 06:17 BRT — lembrete (reserva)
     - cron: "17 12 * * *"  # 09:17 BRT — lembrete (reserva)
@@ -16,7 +17,7 @@ on:
       comando:
         description: "O que rodar"
         type: choice
-        options: [sync, lembrete, testar]
+        options: [sync, lembrete, semana, testar]
         default: sync
       dry_run:
         description: "Só mostrar no log, sem enviar nem commitar"

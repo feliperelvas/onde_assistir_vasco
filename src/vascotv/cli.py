@@ -1,4 +1,4 @@
-"""Linha de comando: `python -m vascotv sync`, `lembrete` e `testar`."""
+"""Linha de comando: `python -m vascotv sync`, `lembrete`, `semana` e `testar`."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import argparse
 import logging
 import sys
 from dataclasses import replace
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from . import cbf, config, fotmob, render, storage, telegram
 from .diff import comparar
@@ -125,13 +125,48 @@ def comando_sync(args: argparse.Namespace) -> int:
     return 0
 
 
-def comando_lembrete(args: argparse.Namespace) -> int:
+def _hoje() -> date:
+    return datetime.now(config.FUSO).date()
+
+
+def _jogos_da_semana(jogos: list[Jogo], hoje: date) -> tuple[list[Jogo], date, date]:
+    """Jogos de segunda a domingo da semana de `hoje`, em ordem cronológica."""
+    segunda = hoje - timedelta(days=hoje.weekday())
+    domingo = segunda + timedelta(days=6)
+    da_semana = [j for j in jogos if j.inicio and segunda <= j.inicio.date() <= domingo]
+    return sorted(da_semana, key=lambda j: j.inicio), segunda, domingo
+
+
+def _resumo_semanal(jogos: list[Jogo], hoje: date, dry_run: bool) -> None:
+    """Na segunda, uma vez por semana: os mesmos 3 crons do lembrete chamam
+    isto, e data/resumo_semanal.json impede que os reservas repitam."""
+    if hoje.weekday() != 0:
+        return
+    da_semana, segunda, domingo = _jogos_da_semana(jogos, hoje)
+    if storage.carregar_ultimo_resumo() == segunda.isoformat():
+        log.info("Resumo da semana ja foi enviado")
+        return
+    _entregar(render.mensagens_resumo_semanal(da_semana, segunda, domingo), dry_run)
+    if not dry_run:
+        storage.salvar_ultimo_resumo(segunda.isoformat())
+
+
+def _carregar_ou_avisar() -> list[Jogo] | None:
     jogos = storage.carregar_snapshot()
     if jogos is None:
         log.error("Nao existe %s. Rode `sync` antes.", config.SNAPSHOT_PATH)
+    return jogos
+
+
+def comando_lembrete(args: argparse.Namespace) -> int:
+    jogos = _carregar_ou_avisar()
+    if jogos is None:
         return 1
 
-    hoje = datetime.now(config.FUSO).date()
+    hoje = _hoje()
+    # Antes do lembrete do dia: a visão da semana vem primeiro no chat.
+    _resumo_semanal(jogos, hoje, args.dry_run)
+
     do_dia = [jogo for jogo in jogos if jogo.inicio and jogo.inicio.date() == hoje]
     if not do_dia:
         log.info("Nenhum jogo do Vasco hoje (%s)", hoje)
@@ -150,6 +185,16 @@ def comando_lembrete(args: argparse.Namespace) -> int:
         vigentes = {jogo.id_jogo for jogo in jogos}
         atualizados = (enviados | {jogo.id_jogo for jogo in pendentes}) & vigentes
         storage.salvar_lembretes(atualizados)
+    return 0
+
+
+def comando_semana(args: argparse.Namespace) -> int:
+    """Resumo da semana atual sob demanda, em qualquer dia; não mexe no estado."""
+    jogos = _carregar_ou_avisar()
+    if jogos is None:
+        return 1
+    da_semana, segunda, domingo = _jogos_da_semana(jogos, _hoje())
+    _entregar(render.mensagens_resumo_semanal(da_semana, segunda, domingo), args.dry_run)
     return 0
 
 
@@ -181,7 +226,12 @@ def construir_parser() -> argparse.ArgumentParser:
         parents=[comuns],
         help="busca o calendario, detecta mudancas e notifica",
     )
-    sub.add_parser("lembrete", parents=[comuns], help="avisa sobre os jogos de hoje")
+    sub.add_parser(
+        "lembrete",
+        parents=[comuns],
+        help="avisa sobre os jogos de hoje (e, na segunda, os da semana)",
+    )
+    sub.add_parser("semana", parents=[comuns], help="envia os jogos desta semana (seg a dom)")
     sub.add_parser("testar", parents=[comuns], help="envia uma mensagem de teste ao Telegram")
     return parser
 
@@ -195,7 +245,12 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     args = construir_parser().parse_args(argv)
-    acoes = {"sync": comando_sync, "lembrete": comando_lembrete, "testar": comando_testar}
+    acoes = {
+        "sync": comando_sync,
+        "lembrete": comando_lembrete,
+        "semana": comando_semana,
+        "testar": comando_testar,
+    }
     try:
         return acoes[args.comando](args)
     except (cbf.ErroCBF, telegram.ErroTelegram) as erro:

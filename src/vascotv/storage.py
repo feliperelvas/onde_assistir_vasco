@@ -47,6 +47,19 @@ def salvar_lembretes(ids: set[str], caminho: Path | None = None) -> None:
     _escrever(caminho, {"enviados": sorted(ids)})
 
 
+def carregar_ultimo_resumo(caminho: Path | None = None) -> str | None:
+    """Segunda-feira (ISO) da última semana cujo resumo já foi enviado."""
+    caminho = caminho or config.RESUMO_PATH
+    if not caminho.exists():
+        return None
+    return json.loads(caminho.read_text(encoding="utf-8")).get("semana")
+
+
+def salvar_ultimo_resumo(segunda: str, caminho: Path | None = None) -> None:
+    caminho = caminho or config.RESUMO_PATH
+    _escrever(caminho, {"semana": segunda})
+
+
 def carregar_alertas(caminho: Path | None = None) -> dict[str, str]:
     """Fontes com problema já avisado no Telegram -> erro avisado."""
     caminho = caminho or config.ALERTAS_PATH

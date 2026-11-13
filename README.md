@@ -31,6 +31,21 @@ estádio:
 📺 Amazon Prime
 ```
 
+**Toda segunda, manda os jogos da semana** (de segunda a domingo):
+
+```
+🗓 Semana do Vasco (16/11 a 22/11) — 2 jogos
+
+⚽ Vasco x Internacional
+🏆 Brasileirão · Série A — rodada 35
+🕐 19/11 (qui) 19:30
+🏟 São Januário — Rio de Janeiro, RJ
+📺 Premiere, Sportv
+
+⚽ Red Bull Bragantino x Vasco
+...
+```
+
 No resto do tempo, fica calado. Só entram jogos do time profissional masculino.
 
 ## Como usar o seu
@@ -52,7 +67,8 @@ No resto do tempo, fica calado. Só entram jogos do time profissional masculino.
 6. **Teste**: em **Actions → Onde assistir o Vasco → Run workflow**, escolha `testar` e desmarque
    `dry_run`. Deve chegar uma mensagem de confirmação no Telegram.
 
-A partir daí o bot roda sozinho duas vezes por dia, mais o lembrete de manhã.
+A partir daí o bot roda sozinho duas vezes por dia, mais o lembrete de manhã (e, na segunda,
+o resumo da semana).
 
 ## Rodando localmente
 
@@ -62,6 +78,7 @@ export PYTHONPATH=src            # no PowerShell: $env:PYTHONPATH = "src"
 
 python -m vascotv sync --dry-run       # busca o calendário e mostra as mudanças
 python -m vascotv lembrete --dry-run   # mostra o lembrete de hoje, se houver jogo
+python -m vascotv semana --dry-run     # mostra os jogos desta semana
 pytest
 ```
 

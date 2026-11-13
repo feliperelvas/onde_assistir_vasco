@@ -100,3 +100,4 @@ FUSO = ZoneInfo("America/Sao_Paulo")
 SNAPSHOT_PATH = ROOT / "data" / "jogos.json"
 LEMBRETES_PATH = ROOT / "data" / "lembretes.json"
 ALERTAS_PATH = ROOT / "data" / "alertas.json"
+RESUMO_PATH = ROOT / "data" / "resumo_semanal.json"

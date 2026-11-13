@@ -1,6 +1,6 @@
 """Comportamento dos comandos, com a API e o Telegram substituídos."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 import pytest
 
@@ -16,6 +16,12 @@ class _RelogioParado(datetime):
         return datetime(2026, 9, 28, 10, 0, tzinfo=tz or config.FUSO)
 
 
+# Uma terça: com a data real, numa segunda o lembrete mandaria também o resumo
+# semanal e os testes de lembrete mudariam de resultado conforme o dia.
+TERCA = date(2026, 10, 6)
+SEGUNDA = date(2026, 10, 5)
+
+
 @pytest.fixture
 def ambiente(tmp_path, monkeypatch):
     """Redireciona o estado para tmp_path e captura o que iria ao Telegram."""
@@ -23,6 +29,8 @@ def ambiente(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "SNAPSHOT_PATH", tmp_path / "jogos.json")
     monkeypatch.setattr(config, "LEMBRETES_PATH", tmp_path / "lembretes.json")
     monkeypatch.setattr(config, "ALERTAS_PATH", tmp_path / "alertas.json")
+    monkeypatch.setattr(config, "RESUMO_PATH", tmp_path / "resumo_semanal.json")
+    monkeypatch.setattr(cli, "_hoje", lambda: TERCA)
     monkeypatch.setattr(telegram, "enviar", lambda texto, **kw: enviadas.append(texto))
     monkeypatch.setattr(diff, "datetime", _RelogioParado)
     # Os testes que precisam do FotMob sobrescrevem; os outros não tocam a rede.
@@ -199,8 +207,7 @@ def test_falha_no_envio_preserva_o_snapshot_antigo(ambiente, monkeypatch, jogos,
 # --- lembrete ---------------------------------------------------------------
 @pytest.fixture
 def jogo_de_hoje(fazer_jogo):
-    hoje = datetime.now(config.FUSO).date()
-    return fazer_jogo(data=hoje.strftime("%d/%m/%Y"))
+    return fazer_jogo(data=TERCA.strftime("%d/%m/%Y"))
 
 
 def test_lembrete_avisa_o_jogo_de_hoje(ambiente, jogo_de_hoje):
@@ -250,6 +257,91 @@ def test_lembretes_antigos_sao_podados(ambiente, jogo_de_hoje, fazer_jogo):
     cli.main(["lembrete"])
 
     assert storage.carregar_lembretes() == {jogo_de_hoje.id_jogo}
+
+
+# --- resumo semanal ----------------------------------------------------------
+@pytest.fixture
+def semana_com_jogos(fazer_jogo):
+    """Dois jogos na semana de 05 a 11/10 (fora de ordem) e um em cada vizinha."""
+    return [
+        fazer_jogo(id_jogo="sab", data="10/10/2026", hora="16:00"),
+        fazer_jogo(id_jogo="ter", data="06/10/2026", hora="20:30"),
+        fazer_jogo(id_jogo="dom-anterior", data="04/10/2026"),
+        fazer_jogo(id_jogo="seg-seguinte", data="12/10/2026"),
+    ]
+
+
+def test_segunda_manda_resumo_da_semana(ambiente, monkeypatch, semana_com_jogos):
+    storage.salvar_snapshot(semana_com_jogos)
+    monkeypatch.setattr(cli, "_hoje", lambda: SEGUNDA)
+
+    assert cli.main(["lembrete"]) == 0
+
+    (mensagem,) = ambiente
+    assert "Semana do Vasco (05/10 a 11/10)</b> — 2 jogos" in mensagem
+    assert mensagem.index("06/10 (ter) 20:30") < mensagem.index("10/10 (sáb) 16:00")
+    assert "04/10" not in mensagem and "12/10" not in mensagem
+
+
+def test_resumo_vem_antes_do_lembrete_quando_tem_jogo_na_segunda(
+    ambiente, monkeypatch, fazer_jogo
+):
+    storage.salvar_snapshot([fazer_jogo(data="05/10/2026")])
+    monkeypatch.setattr(cli, "_hoje", lambda: SEGUNDA)
+
+    cli.main(["lembrete"])
+
+    resumo, lembrete = ambiente
+    assert "Semana do Vasco" in resumo
+    assert "Hoje tem Vasco" in lembrete
+
+
+def test_resumo_nao_repete_nos_crons_reserva(ambiente, monkeypatch, semana_com_jogos):
+    storage.salvar_snapshot(semana_com_jogos)
+    monkeypatch.setattr(cli, "_hoje", lambda: SEGUNDA)
+    cli.main(["lembrete"])
+
+    assert cli.main(["lembrete"]) == 0
+    assert len(ambiente) == 1
+
+
+def test_resumo_so_na_segunda(ambiente, semana_com_jogos):
+    storage.salvar_snapshot(semana_com_jogos)
+
+    cli.main(["lembrete"])  # terça, dia do jogo "ter"
+
+    (mensagem,) = ambiente
+    assert "Hoje tem Vasco" in mensagem
+
+
+def test_semana_sem_jogos_avisa(ambiente, monkeypatch, fazer_jogo):
+    storage.salvar_snapshot([fazer_jogo(data="07/10/2099")])
+    monkeypatch.setattr(cli, "_hoje", lambda: SEGUNDA)
+
+    cli.main(["lembrete"])
+
+    (mensagem,) = ambiente
+    assert "Nenhum jogo do Vasco nesta semana" in mensagem
+
+
+def test_resumo_dry_run_nao_marca_como_enviado(ambiente, monkeypatch, semana_com_jogos):
+    storage.salvar_snapshot(semana_com_jogos)
+    monkeypatch.setattr(cli, "_hoje", lambda: SEGUNDA)
+
+    cli.main(["lembrete", "--dry-run"])
+
+    assert storage.carregar_ultimo_resumo() is None
+
+
+def test_comando_semana_funciona_em_qualquer_dia_sem_gravar(ambiente, semana_com_jogos):
+    storage.salvar_snapshot(semana_com_jogos)
+
+    assert cli.main(["semana"]) == 0
+    assert cli.main(["semana"]) == 0
+
+    assert len(ambiente) == 2
+    assert "Semana do Vasco (05/10 a 11/10)" in ambiente[0]
+    assert not config.RESUMO_PATH.exists()
 
 
 # --- testar -----------------------------------------------------------------
